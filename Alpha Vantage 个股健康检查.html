@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<!-- saved from url=(0118)file:///C:/Users/cssan/Documents/Codex/2026-06-25/files-mentioned-by-the-user-python/outputs/stock_health_checker.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alpha Vantage 个股健康检查</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --bg: #101318;
+      --panel: #1a222d;
+      --panel2: #202b37;
+      --line: #33414f;
+      --text: #eef3f8;
+      --muted: #9ba9b7;
+      --cyan: #31c7d9;
+      --green: #3ddc84;
+      --amber: #f5b83d;
+      --red: #ff6b70;
+      --violet: #a78bfa;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "Noto Sans SC", "PingFang SC", Arial, sans-serif;
+      font-size: 14px;
+    }
+    button, input { font: inherit; }
+    .app {
+      width: min(1500px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 20px 0 24px;
+    }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(560px, auto);
+      gap: 16px;
+      align-items: end;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0;
+      color: var(--amber);
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 155px 250px 76px 74px;
+      gap: 8px;
+      align-items: end;
+    }
+    .input-group {
+      display: grid;
+      gap: 5px;
+    }
+    .input-group label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    input {
+      height: 40px;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #0f151c;
+      color: var(--text);
+      padding: 0 11px;
+      outline: none;
+    }
+    input:focus { border-color: var(--cyan); }
+    #tickerInput { text-transform: uppercase; }
+    button {
+      height: 40px;
+      border: 0;
+      border-radius: 6px;
+      color: #051015;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary { background: var(--cyan); }
+    .secondary { background: var(--amber); }
+    .status-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 24px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 5px;
+      padding: 3px 8px;
+      background: #2c3948;
+      color: #dce5ed;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .metric, .card {
+      background: var(--panel);
+      border: 1px solid #253240;
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+    }
+    .metric {
+      padding: 12px;
+      min-height: 82px;
+    }
+    .label, .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .metric .value {
+      margin-top: 5px;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .metric .note {
+      margin-top: 5px;
+      color: #7f8d9c;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .main {
+      display: grid;
+      grid-template-columns: 35% minmax(0, 65%);
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .stack {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .card { padding: 14px; }
+    .card-title {
+      margin: 0 0 12px;
+      padding-left: 9px;
+      border-left: 4px solid var(--cyan);
+      color: var(--cyan);
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+    .card-title.amber { border-color: var(--amber); color: var(--amber); }
+    .card-title.green { border-color: var(--green); color: var(--green); }
+    .card-title.violet { border-color: var(--violet); color: var(--violet); }
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .field { min-width: 0; }
+    .field .value {
+      margin-top: 5px;
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+    .big {
+      margin-top: 5px;
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .green-text { color: var(--green); }
+    .amber-text { color: var(--amber); }
+    .red-text { color: var(--red); }
+    .muted-text { color: var(--muted); }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .tag {
+      background: #2c3948;
+      color: #dce5ed;
+      border: 1px solid #3a4a5b;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 12px;
+    }
+    .chart-card { min-height: 520px; }
+    .chart-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .chart-symbol {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+      line-height: 1.5;
+    }
+    .chart-wrap {
+      position: relative;
+      height: 390px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+      background: #0d1219;
+    }
+    #priceCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .signal-panel {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .signal-box {
+      min-height: 64px;
+      background: var(--panel2);
+      border: 1px solid #2f3d4b;
+      border-radius: 7px;
+      padding: 9px;
+    }
+    .signal-box b {
+      display: block;
+      margin-top: 4px;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .error { color: var(--red); font-weight: 700; }
+    .loading { opacity: 0.72; }
+    .notice {
+      border: 1px solid rgba(245, 184, 61, 0.35);
+      background: rgba(245, 184, 61, 0.09);
+      color: #f8d48b;
+      border-radius: 7px;
+      padding: 9px 11px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .notice a { color: #ffe0a3; }
+    @media (max-width: 1080px) {
+      .topbar, .main, .footer-grid, .summary-strip, .signal-panel {
+        grid-template-columns: 1fr;
+      }
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+      .chart-wrap { height: 340px; }
+    }
+    @media (max-width: 620px) {
+      .controls, .grid2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="">
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1 id="reportTitle">Alpha Vantage 个股健康检查</h1>
+        <div class="subtitle" id="reportSubtitle">输入股票代码，自动拉取基本面、盈收、现金流、价格、支撑位与大佬买入信号</div>
+      </div>
+      <form class="controls" id="stockForm">
+        <div class="input-group">
+          <label for="tickerInput">股票代码</label>
+          <input id="tickerInput" value="AAPL" autocomplete="off" aria-label="股票代码">
+        </div>
+        <div class="input-group">
+          <label for="apiKeyInput">Alpha Vantage API Key</label>
+          <input id="apiKeyInput" type="password" autocomplete="off" aria-label="Alpha Vantage API Key" placeholder="粘贴免费密钥">
+        </div>
+        <button class="secondary" type="button" id="saveKeyButton">保存</button>
+        <button class="primary" type="submit">检查</button>
+      </form>
+    </header>
+
+    <div class="notice" id="keyNotice" style="display: none;">
+      Alpha Vantage 免费密钥需要你本人到
+      <a href="https://www.alphavantage.co/support/#api-key" target="_blank" rel="noreferrer">官方页面</a>
+      申请后填入。页面会把密钥保存在本机浏览器 localStorage，不会上传到我这里。
+    </div>
+
+    <div class="status-line">
+      <span id="statusText" class="error">Thank you for using Alpha Vantage! Please consider spreading out your free API requests more sparingly (1 request per second). You may subscribe to any of the premium plans at https://www.alphavantage.co/premium/ to lift the free key rate limit (25 requests per day), raise the per-second burst limit, and instantly unlock all premium endpoints</span>
+      <span class="pill" id="dataSource">Alpha Vantage API</span>
+    </div>
+
+    <section class="summary-strip">
+      <div class="metric">
+        <div class="label">综合健康评分</div>
+        <div class="value" id="healthScore">-- / 10</div>
+        <div class="note" id="healthNote">等待检查</div>
+      </div>
+      <div class="metric">
+        <div class="label">当前价格</div>
+        <div class="value" id="currentPrice">--</div>
+        <div class="note" id="priceNote">--</div>
+      </div>
+      <div class="metric">
+        <div class="label">估值状态</div>
+        <div class="value" id="valuationStatus">--</div>
+        <div class="note" id="peLine">--</div>
+      </div>
+      <div class="metric">
+        <div class="label">趋势状态</div>
+        <div class="value" id="trendStatus">--</div>
+        <div class="note" id="maLine">--</div>
+      </div>
+      <div class="metric">
+        <div class="label">风险温度</div>
+        <div class="value" id="riskStatus">--</div>
+        <div class="note" id="rsiLine">--</div>
+      </div>
+    </section>
+
+    <section class="main">
+      <div class="stack">
+        <article class="card">
+          <h2 class="card-title">左侧基本面：财务健康 &amp; 资产负债</h2>
+          <div class="grid2">
+            <div class="field">
+              <div class="label">市值</div>
+              <div class="value" id="marketCap">--</div>
+            </div>
+            <div class="field">
+              <div class="label">净现金公司</div>
+              <div class="value" id="netCash">--</div>
+            </div>
+            <div class="field">
+              <div class="label">资产负债率</div>
+              <div class="value" id="debtRatio">--</div>
+            </div>
+            <div class="field">
+              <div class="label">自由现金流</div>
+              <div class="value" id="freeCashflow">--</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2 class="card-title">盈收表现 &amp; 护城河新概念</h2>
+          <div class="grid2">
+            <div class="field">
+              <div class="label">最新季度营收</div>
+              <div class="value" id="latestRevenue">--</div>
+            </div>
+            <div class="field">
+              <div class="label">营收同比</div>
+              <div class="value" id="revenueGrowth">--</div>
+            </div>
+            <div class="field">
+              <div class="label">最新季度净利</div>
+              <div class="value" id="latestIncome">--</div>
+            </div>
+            <div class="field">
+              <div class="label">净利同比</div>
+              <div class="value" id="earningsGrowth">--</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <div class="label">护城河评级</div>
+            <div class="value amber-text" id="moatRating">--</div>
+          </div>
+          <div class="tag-row" id="businessTags">
+            <span class="tag">等待数据</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2 class="card-title">公司信息 &amp; 综合阶段</h2>
+          <div class="field">
+            <div class="label">行业 / 板块</div>
+            <div class="value" id="sectorLine">--</div>
+          </div>
+          <div style="margin-top:12px;">
+            <span class="label">综合评估阶段：</span>
+            <span class="value green-text" id="performanceStage">等待数据</span>
+          </div>
+        </article>
+      </div>
+
+      <article class="card chart-card">
+        <div class="chart-head">
+          <h2 class="card-title" style="margin:0;">右侧价格图 &amp; 买入信号模型</h2>
+          <div class="chart-symbol" id="chartSymbol">AAPL</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="priceCanvas"></canvas>
+        </div>
+        <div class="signal-panel">
+          <div class="signal-box">
+            <div class="label">买入提示</div>
+            <b id="buySignal">--</b>
+          </div>
+          <div class="signal-box">
+            <div class="label">安全支撑价</div>
+            <b class="green-text" id="supportPrice">--</b>
+          </div>
+          <div class="signal-box">
+            <div class="label">策略止损价</div>
+            <b class="red-text" id="stopLoss">--</b>
+          </div>
+          <div class="signal-box">
+            <div class="label">模型区间</div>
+            <b id="modelRange">日线 100 根</b>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="footer-grid">
+      <article class="card">
+        <h2 class="card-title amber">估值评估与内在价值</h2>
+        <div class="grid2">
+          <div class="field">
+            <div class="label">当前 PE</div>
+            <div class="value" id="peValue">--</div>
+          </div>
+          <div class="field">
+            <div class="label">估值判断</div>
+            <div class="value amber-text" id="valuationText">--</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="label">散户实用合理内在价值估算</div>
+          <div class="big amber-text" id="intrinsicValue">--</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2 class="card-title green">支撑、均线与风险</h2>
+        <div class="grid2">
+          <div class="field">
+            <div class="label">50日均线</div>
+            <div class="value green-text" id="sma50">--</div>
+          </div>
+          <div class="field">
+            <div class="label">100日均线</div>
+            <div class="value" id="sma200">--</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <div class="label">52周区间</div>
+          <div class="big" id="weekRange">--</div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2 class="card-title violet">大佬买入数据 &amp; 通知</h2>
+        <div class="field" style="margin-bottom:12px;">
+          <div class="label">Alpha Vantage 买入触发</div>
+          <div class="value green-text" id="institutionSignal">等待数据</div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <div class="label">未来看点</div>
+            <div class="value green-text" id="opportunityText">--</div>
+          </div>
+          <div class="field">
+            <div class="label">风险注意</div>
+            <div class="value red-text" id="riskText">--</div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULT_ALPHA_VANTAGE_API_KEY = "";
+    const API_BASE = "https://www.alphavantage.co/query";
+    const els = {};
+    [
+      "reportTitle", "reportSubtitle", "statusText", "dataSource", "tickerInput", "apiKeyInput",
+      "stockForm", "saveKeyButton", "healthScore", "healthNote", "currentPrice", "priceNote",
+      "valuationStatus", "peLine", "trendStatus", "maLine", "riskStatus", "rsiLine",
+      "marketCap", "netCash", "debtRatio", "freeCashflow", "latestRevenue", "revenueGrowth",
+      "latestIncome", "earningsGrowth", "moatRating", "businessTags", "sectorLine",
+      "performanceStage", "chartSymbol", "buySignal", "supportPrice", "stopLoss", "modelRange",
+      "peValue", "valuationText", "intrinsicValue", "sma50", "sma200", "weekRange",
+      "institutionSignal", "opportunityText", "riskText", "keyNotice"
+    ].forEach((id) => els[id] = document.getElementById(id));
+
+    const fmt = new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 });
+    const usd = (value) => Number.isFinite(value) ? `USD ${fmt.format(value)}` : "--";
+    const pct = (value) => Number.isFinite(value) ? `${value.toFixed(2)}%` : "--";
+    const compact = (value) => {
+      if (!Number.isFinite(value)) return "--";
+      const abs = Math.abs(value);
+      if (abs >= 1e12) return `${(value / 1e12).toFixed(2)} 万亿`;
+      if (abs >= 1e9) return `${(value / 1e9).toFixed(2)} 十亿`;
+      if (abs >= 1e6) return `${(value / 1e6).toFixed(2)} 百万`;
+      return fmt.format(value);
+    };
+    const num = (value) => {
+      if (value === undefined || value === null || value === "None" || value === "") return NaN;
+      const parsed = Number(String(value).replace(/,/g, ""));
+      return Number.isFinite(parsed) ? parsed : NaN;
+    };
+
+    function setStatus(text, isError = false) {
+      els.statusText.textContent = text;
+      els.statusText.className = isError ? "error" : "";
+    }
+
+    function normalizeTicker(raw) {
+      return raw.trim().replace(/\s+/g, "").toUpperCase();
+    }
+
+    function getApiKey() {
+      return els.apiKeyInput.value.trim() || localStorage.getItem("alphaVantageApiKey") || DEFAULT_ALPHA_VANTAGE_API_KEY;
+    }
+
+    function saveApiKey() {
+      const key = els.apiKeyInput.value.trim();
+      if (!key) {
+        setStatus("请先填写 Alpha Vantage API Key", true);
+        return;
+      }
+      localStorage.setItem("alphaVantageApiKey", key);
+      setStatus("API Key 已保存在本机浏览器");
+    }
+
+    function alphaUrl(fn, symbol, extra = {}) {
+      const params = new URLSearchParams({ function: fn, symbol, apikey: getApiKey(), ...extra });
+      return `${API_BASE}?${params.toString()}`;
+    }
+
+    async function fetchAlpha(fn, symbol, extra = {}) {
+      const response = await fetch(alphaUrl(fn, symbol, extra), { cache: "no-store" });
+      if (!response.ok) throw new Error(`Alpha Vantage 请求失败：${response.status}`);
+      const data = await response.json();
+      if (data.Note) throw new Error("Alpha Vantage 免费额度过快，请稍后再试");
+      if (data.Information) throw new Error(data.Information);
+      if (data["Error Message"]) throw new Error(data["Error Message"]);
+      return data;
+    }
+
+    async function safeFetchAlpha(fn, symbol, extra = {}) {
+      try {
+        return await fetchAlpha(fn, symbol, extra);
+      } catch (error) {
+        return { __error: error.message || `${fn} 读取失败` };
+      }
+    }
+
+    function parseDailySeries(data) {
+      const series = data["Time Series (Daily)"] || {};
+      return Object.entries(series)
+        .map(([date, row]) => ({
+          date,
+          open: num(row["1. open"]),
+          high: num(row["2. high"]),
+          low: num(row["3. low"]),
+          close: num(row["4. close"]),
+          volume: num(row["5. volume"])
+        }))
+        .filter((row) => Number.isFinite(row.close))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function sma(values, length) {
+      if (values.length < length) return NaN;
+      return values.slice(-length).reduce((sum, value) => sum + value, 0) / length;
+    }
+
+    function quantile(values, q) {
+      const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
+      if (!sorted.length) return NaN;
+      const pos = (sorted.length - 1) * q;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+    }
+
+    function rsi(values, period = 14) {
+      if (values.length <= period) return NaN;
+      const slice = values.slice(-period - 1);
+      let gains = 0;
+      let losses = 0;
+      for (let i = 1; i < slice.length; i += 1) {
+        const diff = slice[i] - slice[i - 1];
+        if (diff >= 0) gains += diff;
+        else losses -= diff;
+      }
+      if (losses === 0) return 100;
+      const rs = gains / losses;
+      return 100 - (100 / (1 + rs));
+    }
+
+    function growthRate(current, previous) {
+      if (!Number.isFinite(current) || !Number.isFinite(previous) || previous === 0) return NaN;
+      return ((current - previous) / Math.abs(previous)) * 100;
+    }
+
+    function latestQuarter(reports) {
+      return Array.isArray(reports) && reports.length ? reports[0] : {};
+    }
+
+    function sameQuarterLastYear(reports, latest) {
+      if (!Array.isArray(reports) || !latest.fiscalDateEnding) return {};
+      const latestDate = new Date(latest.fiscalDateEnding);
+      return reports.find((row) => {
+        const date = new Date(row.fiscalDateEnding);
+        return date.getUTCFullYear() === latestDate.getUTCFullYear() - 1 &&
+          date.getUTCMonth() === latestDate.getUTCMonth();
+      }) || reports[4] || {};
+    }
+
+    function judgeValuation(pe) {
+      if (!Number.isFinite(pe) || pe <= 0) return ["资料不足", "muted"];
+      if (pe < 15) return ["偏低估", "green"];
+      if (pe <= 28) return ["合理区间", "amber"];
+      if (pe <= 45) return ["偏高估", "amber"];
+      return ["高估风险", "red"];
+    }
+
+    function scoreMoat(overview, revenueGrowth, netMargin, fcfMargin) {
+      const marketCap = num(overview.MarketCapitalization);
+      const roe = num(overview.ReturnOnEquityTTM) * 100;
+      let score = 0;
+      if (marketCap > 2e11) score += 2;
+      else if (marketCap > 5e10) score += 1;
+      if (Number.isFinite(netMargin) && netMargin > 18) score += 2;
+      else if (Number.isFinite(netMargin) && netMargin > 8) score += 1;
+      if (Number.isFinite(roe) && roe > 20) score += 1.5;
+      if (Number.isFinite(fcfMargin) && fcfMargin > 15) score += 1.5;
+      if (Number.isFinite(revenueGrowth) && revenueGrowth > 5) score += 1;
+      if (score >= 6) return ["极宽 - 品牌/规模/现金流复合护城河", score];
+      if (score >= 4) return ["较宽 - 盈利能力与规模较强", score];
+      if (score >= 2) return ["中等 - 需要继续验证增长质量", score];
+      return ["偏弱 - 暂未形成稳定护城河证据", score];
+    }
+
+    function drawChart(rows, levels) {
+      const canvas = document.getElementById("priceCanvas");
+      const wrap = canvas.parentElement;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(wrap.clientWidth * dpr);
+      canvas.height = Math.floor(wrap.clientHeight * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const width = wrap.clientWidth;
+      const height = wrap.clientHeight;
+      ctx.clearRect(0, 0, width, height);
+
+      const data = rows.slice(-100);
+      if (data.length < 2) {
+        ctx.fillStyle = "#9ba9b7";
+        ctx.font = "14px Microsoft YaHei";
+        ctx.fillText("价格数据不足，无法绘图", 24, 36);
+        return;
+      }
+      const closes = data.map((row) => row.close);
+      const allLevels = [levels.support, levels.stop, levels.sma50, levels.sma200].filter(Number.isFinite);
+      const min = Math.min(...closes, ...allLevels) * 0.985;
+      const max = Math.max(...closes, ...allLevels) * 1.015;
+      const padL = 52;
+      const padR = 18;
+      const padT = 24;
+      const padB = 34;
+      const x = (i) => padL + (i / (data.length - 1)) * (width - padL - padR);
+      const y = (value) => padT + ((max - value) / (max - min)) * (height - padT - padB);
+
+      ctx.strokeStyle = "#22303c";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 5; i += 1) {
+        const gy = padT + i * ((height - padT - padB) / 4);
+        ctx.beginPath();
+        ctx.moveTo(padL, gy);
+        ctx.lineTo(width - padR, gy);
+        ctx.stroke();
+      }
+
+      function drawLevel(value, color, label) {
+        if (!Number.isFinite(value)) return;
+        const ly = y(value);
+        ctx.strokeStyle = color;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(padL, ly);
+        ctx.lineTo(width - padR, ly);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = "12px Microsoft YaHei";
+        ctx.fillText(`${label} ${value.toFixed(2)}`, padL + 8, ly - 6);
+      }
+
+      drawLevel(levels.support, "#3ddc84", "支撑");
+      drawLevel(levels.stop, "#ff6b70", "止损");
+      drawLevel(levels.sma50, "#31c7d9", "50MA");
+      drawLevel(levels.sma200, "#f5b83d", "100MA");
+
+      ctx.strokeStyle = "#eaf2f8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      data.forEach((row, i) => {
+        if (i === 0) ctx.moveTo(x(i), y(row.close));
+        else ctx.lineTo(x(i), y(row.close));
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = "#9ba9b7";
+      ctx.font = "12px Microsoft YaHei";
+      ctx.fillText(data[0].date, padL, height - 12);
+      ctx.fillText(data[data.length - 1].date, width - 96, height - 12);
+      ctx.fillText(max.toFixed(2), 8, padT + 4);
+      ctx.fillText(min.toFixed(2), 8, height - padB);
+    }
+
+    function notifyBuy(symbol, message) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        new Notification(`${symbol} 出现买入信号`, { body: message });
+        return;
+      }
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") new Notification(`${symbol} 出现买入信号`, { body: message });
+        });
+      }
+    }
+
+    function analyzeBigBuyer(symbol, insider, holdings) {
+      const tx = Array.isArray(insider.data) ? insider.data : [];
+      const buyRows = tx.filter((row) => {
+        const type = String(row.transaction_type || row.transactionType || "").toLowerCase();
+        const shares = num(row.shares || row.transaction_shares || row.amount);
+        return shares > 0 && (type.includes("buy") || type.includes("acquisition") || type.includes("purchase"));
+      });
+      const holders = Array.isArray(holdings.data) ? holdings.data : [];
+      const institutionBuyRows = holders.filter((row) => {
+        const change = num(row.change || row.change_in_shares || row.shares_change);
+        return change > 0;
+      });
+      const totalBuys = buyRows.length + institutionBuyRows.length;
+      if (totalBuys > 0) {
+        const latest = buyRows[0] || institutionBuyRows[0] || {};
+        const name = latest.executive || latest.entity || latest.holder || latest.institution || "机构/内部人";
+        const message = `${name} 有买入/增持记录，共 ${totalBuys} 条`;
+        notifyBuy(symbol, message);
+        return message;
+      }
+      return "未发现明确买入/增持触发";
+    }
+
+    function applyReport(symbol, data) {
+      const { quote, daily, overview, income, balance, cashflow, insider, holdings } = data;
+      const rows = parseDailySeries(daily);
+      const closes = rows.map((row) => row.close);
+      const latestQuote = quote["Global Quote"] || {};
+      const price = num(latestQuote["05. price"]) || closes.at(-1);
+      const previous = num(latestQuote["08. previous close"]);
+      const changePct = num(String(latestQuote["10. change percent"] || "").replace("%", ""));
+      const pe = num(overview.PERatio);
+      const eps = num(overview.EPS);
+      const marketCap = num(overview.MarketCapitalization);
+      const ma50 = sma(closes, 50);
+      const ma200 = sma(closes, 100);
+      const rsi14 = rsi(closes, 14);
+      const support = Math.min(quantile(closes, 0.25), ma50 || Infinity);
+      const stop = support * 0.93;
+      const low52 = num(overview["52WeekLow"]) || Math.min(...closes);
+      const high52 = num(overview["52WeekHigh"]) || Math.max(...closes);
+      const valuation = judgeValuation(pe);
+      const qIncome = latestQuarter(income.quarterlyReports);
+      const yIncome = sameQuarterLastYear(income.quarterlyReports, qIncome);
+      const qBalance = latestQuarter(balance.quarterlyReports);
+      const qCash = latestQuarter(cashflow.quarterlyReports);
+      const revenue = num(qIncome.totalRevenue);
+      const lastRevenue = num(yIncome.totalRevenue);
+      const netIncome = num(qIncome.netIncome);
+      const lastNetIncome = num(yIncome.netIncome);
+      const revenueYoY = growthRate(revenue, lastRevenue);
+      const incomeYoY = growthRate(netIncome, lastNetIncome);
+      const operatingCash = num(qCash.operatingCashflow);
+      const capex = Math.abs(num(qCash.capitalExpenditures));
+      const fcf = operatingCash - capex;
+      const cash = num(qBalance.cashAndCashEquivalentsAtCarryingValue) || num(qBalance.cashAndShortTermInvestments);
+      const debt = num(qBalance.shortLongTermDebtTotal) || (num(qBalance.shortTermDebt) + num(qBalance.longTermDebt));
+      const assets = num(qBalance.totalAssets);
+      const liabilities = num(qBalance.totalLiabilities);
+      const debtRatio = liabilities / assets * 100;
+      const netMargin = revenue ? netIncome / revenue * 100 : NaN;
+      const fcfMargin = revenue ? fcf / revenue * 100 : NaN;
+      const moat = scoreMoat(overview, revenueYoY, netMargin, fcfMargin);
+      const trendGood = price > ma50 && ma50 > ma200;
+      const trendWeak = price < ma200;
+      const rsiHot = rsi14 >= 70;
+      const rsiCold = rsi14 <= 30;
+      const buyZone = price <= support * 1.04 && !trendWeak && !rsiHot;
+      const buySignal = buyZone ? "分批买入区" : trendGood && !rsiHot ? "趋势持有" : rsiHot ? "过热等待" : "继续观察";
+      const fairPe = Number.isFinite(pe) ? Math.min(Math.max(pe * 0.85, 12), 30) : 18;
+      const intrinsic = Number.isFinite(eps) ? eps * fairPe : NaN;
+      const bigBuyerMessage = analyzeBigBuyer(symbol, insider, holdings);
+
+      let score = 5 + moat[1] * 0.35;
+      if (trendGood) score += 1.2;
+      if (trendWeak) score -= 1.2;
+      if (valuation[0] === "偏低估") score += 1;
+      if (valuation[0] === "偏高估") score -= 0.6;
+      if (valuation[0] === "高估风险") score -= 1.2;
+      if (rsiHot) score -= 0.5;
+      if (Number.isFinite(revenueYoY) && revenueYoY > 0) score += 0.5;
+      if (Number.isFinite(incomeYoY) && incomeYoY > 0) score += 0.5;
+      if (cash > debt) score += 0.7;
+      score = Math.min(10, Math.max(1, score));
+
+      els.reportTitle.textContent = `${symbol} / ${overview.Name || "目标公司"} 健康检查`;
+      els.reportSubtitle.textContent = `更新时间：${new Date().toLocaleString("zh-CN")} · 数据源：Alpha Vantage`;
+      els.healthScore.textContent = `${score.toFixed(1)} / 10`;
+      els.healthScore.className = score >= 7 ? "value green-text" : score >= 5 ? "value amber-text" : "value red-text";
+      els.healthNote.textContent = score >= 7 ? "整体健康，适合持续跟踪" : score >= 5 ? "中性，等待更好价格" : "风险偏高，先看防守";
+      els.currentPrice.textContent = usd(price);
+      els.priceNote.textContent = Number.isFinite(changePct) ? `日涨跌幅 ${pct(changePct)}` : `前收 ${usd(previous)}`;
+      els.valuationStatus.textContent = valuation[0];
+      els.valuationStatus.className = valuation[1] === "green" ? "value green-text" : valuation[1] === "red" ? "value red-text" : "value amber-text";
+      els.peLine.textContent = `PE ${Number.isFinite(pe) ? pe.toFixed(2) : "--"}`;
+      els.trendStatus.textContent = trendGood ? "多头趋势" : trendWeak ? "趋势偏弱" : "震荡观察";
+      els.trendStatus.className = trendGood ? "value green-text" : trendWeak ? "value red-text" : "value amber-text";
+      els.maLine.textContent = `50MA ${usd(ma50)} / 100MA ${usd(ma200)}`;
+      els.riskStatus.textContent = rsiHot ? "过热" : rsiCold ? "偏冷" : "正常";
+      els.riskStatus.className = rsiHot ? "value red-text" : rsiCold ? "value green-text" : "value amber-text";
+      els.rsiLine.textContent = `RSI(14) ${Number.isFinite(rsi14) ? rsi14.toFixed(1) : "--"}`;
+      els.marketCap.textContent = `USD ${compact(marketCap)}`;
+      if (Number.isFinite(cash) && Number.isFinite(debt)) {
+        els.netCash.textContent = cash > debt ? "是，净现金" : "否，有净负债";
+        els.netCash.className = cash > debt ? "value green-text" : "value red-text";
+      } else {
+        els.netCash.textContent = "资产负债表暂不可用";
+        els.netCash.className = "value amber-text";
+      }
+      els.debtRatio.textContent = pct(debtRatio);
+      els.freeCashflow.textContent = usd(fcf);
+      els.latestRevenue.textContent = usd(revenue);
+      els.revenueGrowth.textContent = pct(revenueYoY);
+      els.revenueGrowth.className = revenueYoY >= 0 ? "value green-text" : "value red-text";
+      els.latestIncome.textContent = usd(netIncome);
+      els.earningsGrowth.textContent = pct(incomeYoY);
+      els.earningsGrowth.className = incomeYoY >= 0 ? "value green-text" : "value red-text";
+      els.moatRating.textContent = moat[0];
+      els.businessTags.innerHTML = `
+        <span class="tag">${overview.Sector || "未知板块"}</span>
+        <span class="tag">${overview.Industry || "未知行业"}</span>
+        <span class="tag">净利率 ${pct(netMargin)}</span>
+        <span class="tag">FCF率 ${pct(fcfMargin)}</span>
+      `;
+      els.sectorLine.textContent = `${overview.Sector || "--"} / ${overview.Industry || "--"}`;
+      els.performanceStage.textContent = trendGood && revenueYoY > 0 ? "基本面与趋势同步改善" : trendWeak ? "趋势修复前" : "数据混合，继续观察";
+      els.chartSymbol.textContent = `${symbol} · Alpha Vantage 日线`;
+      els.buySignal.textContent = buySignal;
+      els.buySignal.className = buyZone ? "green-text" : rsiHot ? "red-text" : "amber-text";
+      els.supportPrice.textContent = usd(support);
+      els.stopLoss.textContent = usd(stop);
+      els.modelRange.textContent = "日线 100 根";
+      els.peValue.textContent = Number.isFinite(pe) ? pe.toFixed(2) : "--";
+      els.valuationText.textContent = valuation[0];
+      els.intrinsicValue.textContent = usd(intrinsic);
+      els.sma50.textContent = usd(ma50);
+      els.sma200.textContent = usd(ma200);
+      els.weekRange.textContent = `${usd(low52)} - ${usd(high52)}`;
+      els.institutionSignal.textContent = bigBuyerMessage;
+      els.opportunityText.textContent = buyZone ? "接近支撑且未过热" : trendGood ? "价格强于均线结构" : "等待支撑确认";
+      els.riskText.textContent = rsiHot ? "短线过热回撤" : valuation[0] === "高估风险" ? "估值压缩风险" : "财报与宏观波动";
+      window.__lastRows = rows;
+      window.__lastLevels = { support, stop, sma50: ma50, sma200: ma200 };
+      drawChart(rows, window.__lastLevels);
+    }
+
+    async function runCheck(symbol) {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        setStatus("请先填写并保存 Alpha Vantage API Key", true);
+        return;
+      }
+      els.apiKeyInput.value = apiKey;
+      setStatus(`正在用 Alpha Vantage 检查 ${symbol}...`);
+      document.body.classList.add("loading");
+      try {
+        const [quote, daily, overview, income, balance, cashflow, insider, holdings] = await Promise.all([
+          fetchAlpha("GLOBAL_QUOTE", symbol),
+          fetchAlpha("TIME_SERIES_DAILY", symbol),
+          fetchAlpha("OVERVIEW", symbol),
+          safeFetchAlpha("INCOME_STATEMENT", symbol),
+          safeFetchAlpha("BALANCE_SHEET", symbol),
+          safeFetchAlpha("CASH_FLOW", symbol),
+          safeFetchAlpha("INSIDER_TRANSACTIONS", symbol),
+          safeFetchAlpha("INSTITUTIONAL_HOLDINGS", symbol)
+        ]);
+        applyReport(symbol, { quote, daily, overview, income, balance, cashflow, insider, holdings });
+        setStatus(`${symbol} 检查完成`);
+      } catch (error) {
+        setStatus(error.message || "加载失败，请检查股票代码、API Key 或免费额度", true);
+      } finally {
+        document.body.classList.remove("loading");
+      }
+    }
+
+    els.saveKeyButton.addEventListener("click", saveApiKey);
+    els.stockForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const symbol = normalizeTicker(els.tickerInput.value);
+      if (!symbol) {
+        setStatus("请输入股票代码", true);
+        return;
+      }
+      runCheck(symbol);
+    });
+    window.addEventListener("resize", () => {
+      const symbol = normalizeTicker(els.tickerInput.value);
+      if (symbol && window.__lastRows && window.__lastLevels) drawChart(window.__lastRows, window.__lastLevels);
+    });
+
+    const savedKey = localStorage.getItem("alphaVantageApiKey") || DEFAULT_ALPHA_VANTAGE_API_KEY;
+    if (savedKey) {
+      els.apiKeyInput.value = savedKey;
+      els.keyNotice.style.display = "none";
+      runCheck(normalizeTicker(els.tickerInput.value));
+    } else {
+      setStatus("等待填写 Alpha Vantage API Key");
+    }
+  </script>
+
+
+</body></html>
