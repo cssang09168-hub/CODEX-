@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<!-- saved from url=(0114)file:///C:/Users/cssan/Documents/Codex/2026-06-25/codex-ai-tab-dom-codex-html/outputs/tarot-divination-system.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>塔罗牌抽签测试系统</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm 12mm;
+      background-color: #FAF8F5;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    h2, h3 {
+      page-break-after: avoid;
+    }
+    tr, .card-box {
+      page-break-inside: avoid;
+    }
+
+    :root {
+      --cream: #faf8f5;
+      --pink: #fff0f5;
+      --rose: #f7abc5;
+      --rose-deep: #d8789e;
+      --gold: #d6a756;
+      --ink: #5b4851;
+      --muted: #8e777f;
+      --line: #ead9d5;
+      --lavender: #c8b5ef;
+      --sky: #a9cbe8;
+      --mint: #a6d5bf;
+      --shadow: 0 18px 45px rgba(151, 103, 118, .18);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(255, 208, 224, .82), transparent 28%),
+        radial-gradient(circle at 82% 4%, rgba(205, 188, 244, .72), transparent 24%),
+        linear-gradient(135deg, #fff0f5 0%, #fff9f0 54%, #faf8f5 100%);
+      overflow-x: hidden;
+    }
+
+    .star-field {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .72;
+      background-image:
+        radial-gradient(circle, rgba(214, 167, 86, .7) 0 1px, transparent 2px),
+        radial-gradient(circle, rgba(247, 171, 197, .65) 0 1px, transparent 2px);
+      background-size: 56px 56px, 89px 89px;
+      background-position: 8px 12px, 30px 18px;
+    }
+
+    .app {
+      position: relative;
+      width: min(1180px, calc(100vw - 34px));
+      margin: 22px auto;
+      border: 1px solid rgba(214, 167, 86, .32);
+      background: rgba(255, 252, 249, .82);
+      box-shadow: var(--shadow);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .top-ribbon {
+      position: relative;
+      padding: 24px 30px 18px;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, transparent 0, rgba(255, 226, 236, .86) 18%, rgba(255, 248, 238, .96) 50%, rgba(226, 216, 255, .74) 82%, transparent 100%);
+    }
+
+    .top-ribbon::before,
+    .top-ribbon::after {
+      content: "✦";
+      position: absolute;
+      top: 22px;
+      color: var(--gold);
+      font-size: 30px;
+    }
+
+    .top-ribbon::before { left: 28px; }
+    .top-ribbon::after { right: 28px; }
+
+    h1 {
+      margin: 0;
+      font-family: "Times New Roman", KaiTi, serif;
+      font-size: clamp(30px, 5vw, 52px);
+      letter-spacing: 0;
+      color: #9a6577;
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: #b78a72;
+      font-family: "Times New Roman", serif;
+      font-size: 15px;
+    }
+
+    .tabs {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .48);
+    }
+
+    .tab-step {
+      display: table-cell;
+      padding: 12px 8px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      border-right: 1px solid var(--line);
+      transition: color .2s, background .2s;
+    }
+
+    .tab-step:last-child { border-right: 0; }
+    .tab-step.active {
+      color: #8e4964;
+      background: rgba(255, 232, 240, .78);
+      font-weight: 700;
+    }
+
+    .panel {
+      display: none;
+      min-height: 640px;
+      padding: 30px;
+    }
+
+    .panel.active {
+      display: block;
+      animation: fadeIn .38s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .two-col {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-spacing: 24px 0;
+      margin-left: -24px;
+      width: calc(100% + 24px);
+    }
+
+    .col {
+      display: table-cell;
+      vertical-align: top;
+      width: 50%;
+    }
+
+    .section-title {
+      margin: 0 0 16px;
+      font-family: "Times New Roman", KaiTi, serif;
+      font-size: 28px;
+      color: #8e4964;
+      letter-spacing: 0;
+    }
+
+    .soft-box,
+    .card-box {
+      border: 1px solid rgba(214, 167, 86, .36);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .66);
+      box-shadow: 0 10px 30px rgba(145, 91, 103, .11);
+    }
+
+    .soft-box {
+      padding: 22px;
+    }
+
+    .choice-grid {
+      display: table;
+      width: 100%;
+      border-spacing: 10px;
+      margin: -10px 0 12px -10px;
+      width: calc(100% + 10px);
+    }
+
+    .choice-row { display: table-row; }
+    .choice {
+      display: table-cell;
+      width: 33.333%;
+      min-height: 70px;
+      padding: 14px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      text-align: center;
+      background: rgba(255, 248, 250, .82);
+      cursor: pointer;
+      transition: transform .18s, border-color .18s, background .18s;
+    }
+
+    .choice input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .choice strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 16px;
+      color: #805260;
+    }
+
+    .choice span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .choice:hover,
+    .choice.selected {
+      transform: translateY(-2px);
+      border-color: var(--gold);
+      background: linear-gradient(145deg, #fff2f7, #fffaf2);
+    }
+
+    textarea,
+    input[type="email"],
+    input[type="password"],
+    .ai-input {
+      display: block;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .8);
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    textarea {
+      min-height: 174px;
+      padding: 14px 14px 28px;
+      resize: vertical;
+      line-height: 1.65;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    .ai-input {
+      height: 46px;
+      padding: 0 14px;
+    }
+
+    textarea:focus,
+    input[type="email"]:focus,
+    input[type="password"]:focus,
+    .ai-input:focus {
+      border-color: var(--rose);
+      box-shadow: 0 0 0 4px rgba(247, 171, 197, .18);
+    }
+
+    .textarea-wrap {
+      position: relative;
+    }
+
+    .counter {
+      position: absolute;
+      right: 12px;
+      bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      background: rgba(255, 255, 255, .72);
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+
+    .paw-stage {
+      min-height: 486px;
+      display: table;
+      width: 100%;
+      text-align: center;
+      background:
+        radial-gradient(circle at center, rgba(255, 236, 243, .88), transparent 34%),
+        repeating-conic-gradient(from 18deg, rgba(214, 167, 86, .18) 0 8deg, transparent 8deg 24deg);
+    }
+
+    .paw-cell {
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    .paw-button {
+      position: relative;
+      width: 190px;
+      height: 190px;
+      margin: 0 auto 18px;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      background:
+        radial-gradient(circle at center, #ffd6e4 0 36%, #f7a8c4 37% 58%, #fff6fa 59% 100%);
+      box-shadow:
+        inset 0 0 0 7px rgba(255, 255, 255, .72),
+        0 22px 42px rgba(194, 103, 132, .28);
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .paw-button:hover {
+      transform: scale(1.04) rotate(-2deg);
+      box-shadow:
+        inset 0 0 0 7px rgba(255, 255, 255, .82),
+        0 26px 54px rgba(194, 103, 132, .34);
+    }
+
+    .toe,
+    .pad {
+      position: absolute;
+      display: block;
+      background: #e984ad;
+      box-shadow: inset 0 -7px 0 rgba(159, 72, 103, .1);
+    }
+
+    .toe {
+      width: 42px;
+      height: 52px;
+      border-radius: 50%;
+      top: 38px;
+    }
+
+    .toe.t1 { left: 37px; transform: rotate(-20deg); }
+    .toe.t2 { left: 74px; top: 24px; }
+    .toe.t3 { right: 37px; transform: rotate(20deg); }
+    .toe.t4 { right: 23px; top: 72px; width: 34px; height: 42px; transform: rotate(42deg); }
+    .pad {
+      left: 54px;
+      bottom: 44px;
+      width: 86px;
+      height: 72px;
+      border-radius: 48% 48% 42% 42%;
+    }
+
+    .paw-label {
+      margin: 0;
+      color: #8e4964;
+      font-family: "Times New Roman", KaiTi, serif;
+      font-size: 23px;
+    }
+
+    .hint {
+      margin: 8px auto 0;
+      max-width: 360px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .ai-config {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-spacing: 10px;
+      margin: 14px 0 0 -10px;
+      width: calc(100% + 10px);
+    }
+
+    .ai-field {
+      display: table-cell;
+      width: 50%;
+      vertical-align: top;
+      color: #805260;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .ai-field input {
+      margin-top: 7px;
+      font-weight: 400;
+    }
+
+    .ai-status,
+    .ai-status-line {
+      margin: 10px 0 0;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 247, 250, .72);
+      color: #8e4964;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .ai-status.loading,
+    .ai-status-line.loading {
+      border-color: rgba(216, 120, 158, .55);
+      background: rgba(255, 236, 244, .88);
+    }
+
+    .tarot-card {
+      position: relative;
+      width: min(328px, 100%);
+      height: 524px;
+      margin: 0 auto;
+      padding: 18px;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, .88), rgba(255, 237, 245, .94)),
+        radial-gradient(circle at center, rgba(214, 167, 86, .24), transparent 42%);
+      border: 4px double var(--gold);
+      box-shadow: 0 26px 52px rgba(106, 72, 84, .24);
+      overflow: hidden;
+      animation: cardReveal .62s ease both;
+    }
+
+    @keyframes cardReveal {
+      from { opacity: 0; transform: rotateY(70deg) scale(.9); }
+      to { opacity: 1; transform: rotateY(0) scale(1); }
+    }
+
+    .tarot-card::before {
+      content: "";
+      position: absolute;
+      inset: 36px 28px 110px;
+      border: 1px solid rgba(214, 167, 86, .45);
+      border-radius: 50%;
+      background:
+        linear-gradient(0deg, transparent 49%, rgba(214, 167, 86, .28) 50%, transparent 51%),
+        linear-gradient(90deg, transparent 49%, rgba(214, 167, 86, .28) 50%, transparent 51%);
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      border: 1px solid rgba(214, 167, 86, .38);
+      border-radius: 8px;
+      padding: 20px 16px;
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 255, 255, .38), transparent 36%),
+        linear-gradient(180deg, rgba(237, 225, 255, .42), rgba(255, 236, 244, .7));
+    }
+
+    .card-number {
+      color: var(--gold);
+      font-family: "Times New Roman", serif;
+      font-size: 18px;
+    }
+
+    .card-symbol {
+      width: 154px;
+      height: 154px;
+      margin: 72px auto 56px;
+      border-radius: 50%;
+      border: 2px solid rgba(214, 167, 86, .7);
+      display: table;
+      background: rgba(255, 250, 244, .72);
+    }
+
+    .card-symbol span {
+      display: table-cell;
+      vertical-align: middle;
+      font-size: 70px;
+      color: #b78449;
+    }
+
+    .card-name {
+      margin: 0;
+      font-family: "Times New Roman", KaiTi, serif;
+      font-size: 28px;
+      color: #7e4b5b;
+    }
+
+    .card-sub {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .spread-picker {
+      margin: 14px 0 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 250, 252, .72);
+    }
+
+    .spread-picker label {
+      display: block;
+      color: #805260;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .spread-select {
+      width: 100%;
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .86);
+      color: var(--ink);
+      font: inherit;
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .spread-description {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .spread-board {
+      position: relative;
+      width: 100%;
+      min-height: 560px;
+      border: 1px solid rgba(214, 167, 86, .36);
+      border-radius: 8px;
+      background:
+        radial-gradient(circle at center, rgba(255, 236, 243, .88), transparent 32%),
+        repeating-conic-gradient(from 18deg, rgba(214, 167, 86, .15) 0 8deg, transparent 8deg 24deg),
+        rgba(255, 255, 255, .54);
+      box-shadow: 0 18px 42px rgba(145, 91, 103, .14);
+      overflow: hidden;
+    }
+
+    .spread-board::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 300px;
+      height: 300px;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(214, 167, 86, .22);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 54px rgba(214, 167, 86, .035),
+        0 0 0 108px rgba(248, 191, 210, .05);
+    }
+
+    .spread-card {
+      position: absolute;
+      width: 96px;
+      min-height: 150px;
+      padding: 8px;
+      border: 2px double var(--gold);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255, 250, 244, .94), rgba(255, 232, 241, .93));
+      box-shadow: 0 10px 24px rgba(106, 72, 84, .18);
+      text-align: center;
+      transform: translate(-50%, -50%);
+      animation: cardReveal .5s ease both;
+      z-index: 2;
+    }
+
+    .spread-board.single-layout .spread-card {
+      width: 240px;
+      min-height: 382px;
+      padding: 15px;
+    }
+
+    .spread-card .slot {
+      color: #8e4964;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.25;
+      min-height: 30px;
+    }
+
+    .spread-card .mini-glyph {
+      width: 54px;
+      height: 54px;
+      margin: 10px auto;
+      display: table;
+      border: 1px solid rgba(214, 167, 86, .56);
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .58);
+      color: #b78449;
+      font-size: 28px;
+    }
+
+    .spread-board.single-layout .spread-card .mini-glyph {
+      width: 132px;
+      height: 132px;
+      margin: 54px auto 44px;
+      font-size: 64px;
+    }
+
+    .spread-card .mini-glyph span {
+      display: table-cell;
+      vertical-align: middle;
+    }
+
+    .spread-card .mini-name {
+      color: #7e4b5b;
+      font-family: "Times New Roman", KaiTi, serif;
+      font-size: 15px;
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    .spread-board.single-layout .spread-card .mini-name {
+      font-size: 27px;
+    }
+
+    .spread-card .mini-sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .spread-caption {
+      margin: 12px 0 0;
+      text-align: center;
+      color: #8e4964;
+      font-family: "Times New Roman", KaiTi, serif;
+      font-size: 20px;
+    }
+
+    .position-list {
+      margin: 10px 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 250, 252, .64);
+      overflow: hidden;
+    }
+
+    .position-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .position-item:last-child {
+      border-bottom: 0;
+    }
+
+    .position-item b {
+      color: #8e4964;
+    }
+
+    .score-line {
+      margin: 0 0 18px;
+      padding: 16px;
+      border-radius: 8px;
+      background: rgba(255, 246, 249, .72);
+      border: 1px solid var(--line);
+    }
+
+    .wing-score {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      margin-top: 10px;
+    }
+
+    .heart-wing {
+      display: table-cell;
+      text-align: center;
+      opacity: .28;
+      filter: grayscale(.5);
+      transition: opacity .2s, transform .2s, filter .2s;
+    }
+
+    .heart-wing.on {
+      opacity: 1;
+      filter: none;
+      transform: translateY(-2px);
+    }
+
+    .heart-wing svg {
+      width: 35px;
+      height: 35px;
+    }
+
+    .interpretation {
+      line-height: 1.72;
+    }
+
+    .info-grid {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-spacing: 10px;
+      margin: 10px 0 12px -10px;
+      width: calc(100% + 10px);
+    }
+
+    .info-row { display: table-row; }
+    .info-item {
+      display: table-cell;
+      width: 50%;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .55);
+      vertical-align: top;
+    }
+
+    .info-item b,
+    .advice-list b {
+      color: #8e4964;
+    }
+
+    .actions {
+      margin-top: 22px;
+      text-align: center;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 22px;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, #d8789e, #c59adf);
+      font-weight: 700;
+      box-shadow: 0 10px 22px rgba(145, 91, 103, .2);
+      transition: transform .18s, opacity .18s;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn.secondary {
+      color: #8e4964;
+      background: rgba(255, 247, 250, .9);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    .btn.wide {
+      width: 100%;
+      margin-top: 18px;
+      font-size: 16px;
+    }
+
+    .advice-hero {
+      position: relative;
+      padding: 30px;
+      overflow: hidden;
+    }
+
+    .advice-hero::after {
+      content: "✧";
+      position: absolute;
+      right: 34px;
+      top: 18px;
+      font-size: 82px;
+      color: rgba(214, 167, 86, .22);
+    }
+
+    .advice-list {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      border-spacing: 18px;
+      margin-left: -18px;
+      width: calc(100% + 18px);
+    }
+
+    .advice-col {
+      display: table-cell;
+      width: 50%;
+      padding: 20px;
+      vertical-align: top;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .56);
+    }
+
+    .advice-col ol {
+      margin: 12px 0 0;
+      padding-left: 22px;
+      line-height: 1.78;
+    }
+
+    .quote {
+      margin: 24px 0 0;
+      padding: 20px;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      color: #9a6577;
+      font-family: "Times New Roman", KaiTi, serif;
+      font-size: 22px;
+    }
+
+    .rating {
+      margin: 8px 0 20px;
+      font-size: 0;
+    }
+
+    .star-btn {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 39px;
+      color: #dcc7bc;
+      padding: 4px 6px;
+      transition: color .18s, transform .18s;
+    }
+
+    .star-btn.on,
+    .star-btn:hover {
+      color: #e8b656;
+      transform: translateY(-2px);
+    }
+
+    .send-status {
+      margin: 12px 0 0;
+      min-height: 22px;
+      color: #8e4964;
+      font-weight: 700;
+    }
+
+    .sakura {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      opacity: .5;
+      pointer-events: none;
+    }
+
+    .sakura::before,
+    .sakura::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 22px;
+      border-radius: 14px 14px 4px 14px;
+      background: #f8bfd2;
+      transform-origin: bottom center;
+    }
+
+    .sakura::before { transform: rotate(-35deg); left: 9px; top: 3px; }
+    .sakura::after { transform: rotate(35deg); right: 8px; top: 3px; }
+    .sakura.s1 { left: 18px; bottom: 28px; }
+    .sakura.s2 { right: 22px; bottom: 78px; transform: scale(.8) rotate(22deg); }
+
+    @media (max-width: 820px) {
+      .panel { padding: 20px; }
+      .two-col,
+      .col,
+      .advice-list,
+      .advice-col {
+        display: block;
+        width: 100%;
+        margin-left: 0;
+      }
+      .col + .col,
+      .advice-col + .advice-col { margin-top: 18px; }
+      .choice-grid,
+      .choice-row,
+      .choice,
+      .info-grid,
+      .info-row,
+      .info-item,
+      .ai-config,
+      .ai-field {
+        display: block;
+        width: 100%;
+      }
+      .choice,
+      .info-item,
+      .ai-field { margin-bottom: 10px; }
+      .tabs { display: block; }
+      .tab-step {
+        display: block;
+        border-right: 0;
+      }
+      .tarot-card { height: 500px; }
+      .spread-board { min-height: 760px; }
+      .spread-card {
+        width: 86px;
+        min-height: 138px;
+      }
+      .spread-board.single-layout {
+        min-height: 500px;
+      }
+      .spread-board.single-layout .spread-card {
+        width: 220px;
+        min-height: 360px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="star-field"></div>
+  <main class="app">
+    <div class="top-ribbon">
+      <h1>78张塔罗牌抽签测试系统</h1>
+      <p class="subtitle">The 78 Tarot Cards · 星光、樱花与猫爪的占卜仪式</p>
+    </div>
+
+    <nav class="tabs" aria-label="占卜流程">
+      <div class="tab-step active" data-step-label="0">1. 前置选择</div>
+      <div class="tab-step" data-step-label="1">2. 卡牌诠释</div>
+      <div class="tab-step" data-step-label="2">3. 行动建议</div>
+      <div class="tab-step" data-step-label="3">4. 反馈导出</div>
+    </nav>
+
+    <section id="tab-setup" class="panel active">
+      <div class="two-col">
+        <div class="col">
+          <div class="soft-box">
+            <h2 class="section-title">请向牌阵说出你的问题</h2>
+            <div class="choice-grid" id="categoryGrid">
+              <div class="choice-row">
+                <label class="choice selected"><input type="radio" name="category" value="love" checked=""><strong>桃花</strong><span>恋爱与关系</span></label>
+                <label class="choice"><input type="radio" name="category" value="career"><strong>事业</strong><span>工作与方向</span></label>
+                <label class="choice"><input type="radio" name="category" value="health"><strong>健康</strong><span>身心与能量</span></label>
+              </div>
+              <div class="choice-row">
+                <label class="choice"><input type="radio" name="category" value="wealth"><strong>财富</strong><span>金钱与资源</span></label>
+                <label class="choice"><input type="radio" name="category" value="education"><strong>学业</strong><span>学习与考试</span></label>
+                <label class="choice"><input type="radio" name="category" value="general"><strong>其他</strong><span>具体问事</span></label>
+              </div>
+            </div>
+            <div class="spread-picker">
+              <label for="spreadSelect">抽牌方式 / 牌阵选择</label>
+              <select id="spreadSelect" class="spread-select"></select>
+              <p class="spread-description" id="spreadDescription">单张牌适合快速解惑、每日运势或明确的小问题。</p>
+            </div>
+            <div class="textarea-wrap">
+              <textarea id="questionInput" maxlength="500" placeholder="请在此具体阐述您当前遇到的困惑或想对塔罗牌倾诉的心声..."></textarea>
+              <span class="counter" id="questionCount">0/500</span>
+            </div>
+            <div class="ai-config">
+              <label class="ai-field">Gemini API Key
+                <input id="geminiKeyInput" type="password" autocomplete="off" placeholder="AIza...">
+              </label>
+              <label class="ai-field">Gemini 模型
+                <input id="geminiModelInput" class="ai-input" type="text" value="gemini-3.5-flash">
+              </label>
+            </div>
+            <p class="ai-status" id="llmSetupStatus">未连接 Gemini 时，将使用本地备用解读。</p>
+          </div>
+        </div>
+        <div class="col">
+          <div class="soft-box paw-stage">
+            <div class="paw-cell">
+              <button class="paw-button" id="drawButton" aria-label="点击粉色猫爪抽取塔罗牌">
+                <span class="toe t1"></span>
+                <span class="toe t2"></span>
+                <span class="toe t3"></span>
+                <span class="toe t4"></span>
+                <span class="pad"></span>
+              </button>
+              <p class="paw-label" id="drawLabel">按下猫爪，召唤一张牌</p>
+              <p class="hint" id="drawHint">牌面将以正位展示。系统会记录你的问题、问题类别与牌阵，并在下一页给出综合解读。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-reveal" class="panel">
+      <div class="two-col">
+        <div class="col">
+          <div class="spread-board single-layout" id="spreadBoard"></div>
+          <p class="spread-caption" id="spreadCaption">单张牌</p>
+        </div>
+        <div class="col">
+          <div class="soft-box interpretation">
+            <h2 class="section-title">多维牌意诠释</h2>
+            <div class="score-line">
+              <b>运势评分：</b><span id="scoreText">0 / 7</span>
+              <div class="wing-score" id="scoreIcons"></div>
+            </div>
+            <h3>牌阵抽取结果：<span id="spreadTitle"></span></h3>
+            <div class="position-list" id="positionList"></div>
+            <h3>核心牌意：<span id="meaningTitle"></span></h3>
+            <div class="info-grid">
+              <div class="info-row">
+                <div class="info-item"><b>元素</b><br><span id="elementText"></span></div>
+                <div class="info-item"><b>占星学</b><br><span id="astrologyText"></span></div>
+              </div>
+              <div class="info-row">
+                <div class="info-item"><b>数字密码学</b><br><span id="numerologyText"></span></div>
+                <div class="info-item"><b>象征</b><br><span id="symbologyText"></span></div>
+              </div>
+            </div>
+            <p><b>核心大意：</b><span id="generalText"></span></p>
+            <p><b>问题理解：</b><span id="focusText"></span></p>
+            <p><b>牌面对应：</b><span id="cardLinkText"></span></p>
+            <p><b>隐藏矛盾：</b><span id="patternText"></span></p>
+            <p><b>针对性解答：</b><span id="specificText"></span></p>
+            <p class="ai-status-line" id="llmRevealStatus">等待抽牌。</p>
+            <div class="actions">
+              <button class="btn secondary" data-go="0">返回修改问题</button>
+              <button class="btn" data-go="2">查看行动指南</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-advice" class="panel">
+      <div class="soft-box advice-hero">
+        <h2 class="section-title">命运的启示与行动指南</h2>
+        <p id="adviceIntro"></p>
+        <div class="advice-list">
+          <div class="advice-col">
+            <h3>光芒对策：宜做的三件事</h3>
+            <ol id="doList"></ol>
+          </div>
+          <div class="advice-col">
+            <h3>避讳提醒：暂缓的两件事</h3>
+            <ol id="avoidList"></ol>
+          </div>
+        </div>
+        <p class="quote" id="fateQuote">愿你的命运如星光般指引你前行。</p>
+        <div class="actions">
+          <button class="btn secondary" data-go="1">回看牌意</button>
+          <button class="btn" data-go="3">填写反馈并导出</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-feedback" class="panel">
+      <div class="soft-box">
+        <h2 class="section-title">满意度调查与报告导出</h2>
+        <h3>本次占卜体验评分</h3>
+        <div class="rating" id="ratingStars" aria-label="满意度星级评分"><button type="button" class="star-btn" aria-label="1星">★</button><button type="button" class="star-btn" aria-label="2星">★</button><button type="button" class="star-btn" aria-label="3星">★</button><button type="button" class="star-btn" aria-label="4星">★</button><button type="button" class="star-btn" aria-label="5星">★</button></div>
+
+        <h3>意见反馈</h3>
+        <div class="textarea-wrap">
+          <textarea id="feedbackInput" maxlength="500" placeholder="可写下你对本次测试、牌意表达或报告内容的反馈..."></textarea>
+          <span class="counter" id="feedbackCount">0/500</span>
+        </div>
+
+        <h3>邮箱投递</h3>
+        <input id="emailInput" type="email" placeholder="请输入您的电子邮箱，系统将为您生成 PDF 格式的全面测试报告并发送至您的邮箱">
+        <button class="btn wide" id="sendButton">生成并发送报告</button>
+        <p class="send-status" id="sendStatus"></p>
+        <button class="btn secondary wide" id="resetButton">返回首页，重新抽牌</button>
+      </div>
+    </section>
+
+    <span class="sakura s1"></span>
+    <span class="sakura s2"></span>
+  </main>
+
+  <script>
+    const categoryMap = {
+      love: { label: "桃花", key: "love_meaning" },
+      career: { label: "事业", key: "career_meaning" },
+      health: { label: "健康", key: "health_meaning" },
+      wealth: { label: "财富", key: "wealth_meaning" },
+      education: { label: "学业", key: "education_meaning" },
+      general: { label: "其他", key: "general_meaning" }
+    };
+
+    const majorBlueprints = [
+      ["major_00_fool", "愚人", "0", "风元素", "天王星", "数字 0（代表开始、未知与无限可能）", "旅人带着轻盈的行囊走向悬崖边，象征信任、冒险与新旅程。", "新的阶段正在开启，答案不在完全掌控中，而在愿意迈出第一步的勇气里。", 5],
+      ["major_01_magician", "魔术师", "I", "风元素", "水星", "数字 1（代表意志、创造与显化）", "桌面陈列四元素工具，指向天与地的手势象征把灵感落到现实。", "你已经具备关键资源，眼下适合主动表达、组织能力并创造结果。", 6],
+      ["major_02_high_priestess", "女祭司", "II", "水元素", "月亮", "数字 2（代表直觉、静默与内在平衡）", "帷幕后方的月光与经卷提醒你倾听潜意识和未说出口的信息。", "表面之外仍有答案，保持安静观察会比急着行动更有力量。", 4],
+      ["major_03_empress", "皇后", "III", "土元素", "金星", "数字 3（代表滋养、生长与丰盛）", "丰饶花园、麦穗与柔和王座象征爱、美、生产力与被滋养。", "资源正在成熟，温柔经营会让关系、作品或计划更自然地开花。", 6],
+      ["major_04_emperor", "皇帝", "IV", "火元素", "白羊座", "数字 4（代表秩序、边界与结构）", "坚固王座与山脉象征规则、责任和稳定的领导力量。", "需要建立清晰边界与计划，用稳定执行替代情绪化摇摆。", 5],
+      ["major_05_hierophant", "教皇", "V", "土元素", "金牛座", "数字 5（代表传统、学习与信念考验）", "祝福手势、钥匙与殿堂象征制度、导师和共同信念。", "向可信的经验、规则或长辈请教，能帮助你通过当前的门槛。", 4],
+      ["major_06_lovers", "恋人", "VI", "风元素", "双子座", "数字 6（代表选择、吸引与价值一致）", "两人站在光下，天使见证真心选择与价值观的联结。", "关键不只是喜欢，而是选择与承诺是否能对齐内心真正的价值。", 6],
+      ["major_07_chariot", "战车", "VII", "水元素", "巨蟹座", "数字 7（代表意志、突破与掌控方向）", "驾驭战车穿过城门，黑白力量被同一目标统合。", "保持方向感，克服分心与拉扯后，你能推动局面向前。", 6],
+      ["major_08_strength", "力量", "VIII", "火元素", "狮子座", "数字 8（代表内在力量、耐心与驯服本能）", "温柔之手安抚狮子，象征以爱与耐性驾驭冲动。", "真正的强大来自稳定、柔软和持续，不必用强硬证明自己。", 6],
+      ["major_09_hermit", "隐士", "IX", "土元素", "处女座", "数字 9（代表沉淀、智慧与独处探索）", "提灯者站在山巅，照亮脚下一小段路。", "答案需要从外界噪音中抽离，留给自己一段认真辨认的时间。", 3],
+      ["major_10_wheel", "命运之轮", "X", "火元素", "木星", "数字 10（代表循环、转折与机会窗口）", "转动的轮盘与四方守护者象征周期变化和命运节点。", "局势正进入转折期，顺势调整会比抗拒变化更有收获。", 5],
+      ["major_11_justice", "正义", "XI", "风元素", "天秤座", "数字 11（代表平衡、因果与判断）", "天平与宝剑象征清晰、公平以及为选择承担后果。", "请回到事实与原则，越诚实面对因果，越能得到稳定结果。", 4],
+      ["major_12_hanged", "倒吊人", "XII", "水元素", "海王星", "数字 12（代表暂停、牺牲与视角转换）", "倒悬的人物带着光环，象征暂缓行动后的新视角。", "当前不宜硬推，换一个角度看问题，会发现被忽略的出路。", 3],
+      ["major_13_death", "死神", "XIII", "水元素", "天蝎座", "数字 13（代表结束、蜕变与重生）", "黑旗与晨光同在，象征旧阶段结束后新的生命力。", "某个模式正在终结，放手不是失败，而是给新局面留出空间。", 3],
+      ["major_14_temperance", "节制", "XIV", "火元素", "射手座", "数字 14（代表调和、修复与流动）", "天使在两个杯子之间调配水流，象征平衡与疗愈。", "用温和节奏整合差异，耐心调配会带来更持久的和谐。", 5],
+      ["major_15_devil", "恶魔", "XV", "土元素", "摩羯座", "数字 15（代表欲望、束缚与清醒）", "锁链与暗色火焰象征依赖、执念和被放大的欲望。", "请看清让你失去自由的诱惑或恐惧，真正的钥匙在你手中。", 2],
+      ["major_16_tower", "高塔", "XVI", "火元素", "火星", "数字 16（代表突变、瓦解与真相显露）", "闪电击中高塔，旧结构被迫崩落以显出真实。", "变化可能猛烈，但它会拆除不再稳固的假象，让你重新建设。", 2],
+      ["major_17_star", "星星", "XVII", "风元素", "水瓶座", "数字 17（代表希望、疗愈与远方指引）", "星光下倾倒清泉，象征信念、净化和温柔的未来感。", "保持希望并照顾自己，微小的修复正在把你带向更亮的方向。", 7],
+      ["major_18_moon", "月亮", "XVIII", "水元素", "双鱼座", "数字 18（代表梦境、迷雾与潜意识）", "月光照亮小径，水面、犬与狼象征直觉和不安的交织。", "信息还不够透明，先分辨恐惧与直觉，再做关键决定。", 3],
+      ["major_19_sun", "太阳", "XIX", "火元素", "太阳", "数字 19（代表喜悦、坦荡与生命力）", "太阳、白马与盛开的花象征清晰、成功和被看见。", "局面趋向明朗，坦诚、热情与公开表达会带来正向结果。", 7],
+      ["major_20_judgement", "审判", "XX", "火元素", "冥王星", "数字 20（代表召唤、觉醒与阶段总结）", "号角唤醒沉睡者，象征复盘、召回力量与新的使命。", "你正在被提醒重新评价过去，并回应更高层次的内在召唤。", 5],
+      ["major_21_world", "世界", "XXI", "土元素", "土星", "数字 21（代表完成、整合与圆满）", "花环中的舞者与四元素守护象征完成、流动和整体性。", "一个阶段趋于圆满，整合经验后，你可以带着成熟进入下一轮旅程。", 7]
+    ];
+
+    const categoryMeanings = {
+      love: ["适合以真诚开局，不必急着定义关系。", "把真实需求说清楚，吸引力会因为坦率而增强。", "暧昧或沉默中仍有重要信号，慢一点更能看见真心。", "关系需要被滋养，主动表达关心会让温度回升。", "设定边界比控制对方更重要，稳定感来自彼此负责。", "可参考可信建议，但不要把世俗标准当成唯一答案。", "感情的重点是双向选择，确认价值观比确认心动更重要。", "关系会向前推进，但双方需要共同目标。", "温柔和耐心是破局关键，少一点试探，多一点安定。", "独处能帮你分辨想念、依赖与真正的爱。", "关系进入变化期，顺势沟通会打开新机会。", "请公平看待彼此付出，别让旧账主导当下。", "暂缓逼问答案，换位思考会软化僵局。", "旧模式必须结束，新关系质量才会出现。", "修复需要节奏，别用一次谈话解决所有问题。", "警惕占有欲、依赖或反复拉扯。", "突发冲突会暴露真实问题，但也提供重建机会。", "关系仍有希望，疗愈比追问更重要。", "暧昧信息混杂，先确认事实再投入情绪。", "坦诚表达会带来明亮回应。", "过去的关系课题正在回响，适合复盘后重新选择。", "关系有走向圆满或阶段完成的潜力。"],
+      career: ["适合尝试新方向，用行动验证机会。", "资源已经到位，主动展示能力。", "先观察组织暗流，再做公开表态。", "项目适合培育，保持稳定产出。", "建立流程、边界和责任分工。", "遵循专业规范或向导师请教。", "面临合作选择，优先价值一致。", "推进速度会加快，集中火力。", "以柔克刚，靠稳定表现赢得认可。", "适合深度研究，不急着曝光。", "职场机会有轮换，抓住窗口。", "用事实和数据争取公平评价。", "暂停硬推，等待条件成熟。", "结束低效模式，准备转型。", "协调资源，避免极端策略。", "警惕过度加班或利益绑定。", "旧方案可能被推翻，及时止损。", "个人品牌正在恢复光亮。", "信息不透明，合同与承诺需确认。", "成果容易被看见，大胆呈现。", "适合复盘过往成绩，争取新定位。", "阶段目标可完成，适合收尾交付。"],
+      wealth: ["可小额尝试，但不要豪赌。", "善用技能与资源创造收益。", "财务信息需保密且谨慎判断。", "稳定积累优于短期刺激。", "预算和规则能守住现金流。", "适合长期、稳健、合规配置。", "消费和投资选择要回到价值。", "有扩张机会，但需控制方向。", "稳住心态，别被市场噪音带走。", "适合整理账目与储蓄计划。", "财运有波动，留好备用金。", "公平交易，合同条款要清楚。", "暂停冲动消费或高风险投资。", "清理沉没成本，断开亏损循环。", "分散配置，平衡风险。", "警惕贪念、借贷依赖和过度消费。", "可能有突然损失，及时风控。", "财务修复期，长期信心会回归。", "看不清的项目先不碰。", "收入或回款趋于明朗。", "适合总结资产结构并重新规划。", "长期目标有达成迹象。"],
+      health: ["身体需要轻松开始，不宜过度勉强。", "行动力恢复，适合建立健康习惯。", "关注睡眠、内分泌与情绪信号。", "滋养身体，规律饮食与休息。", "建立作息边界，减少透支。", "遵循医嘱和专业建议。", "身心平衡受关系影响，保持沟通。", "体能提升，但注意不要过度冲刺。", "温和训练、拉伸与耐心恢复更有效。", "适合静养、体检和独处修复。", "状态起伏，顺应周期调整强度。", "用客观指标评估身体状况。", "需要暂停消耗，给身体恢复时间。", "告别旧习惯会改善状态。", "调和饮食、运动与睡眠。", "留意成瘾、熬夜和压力性饮食。", "突发不适不要拖延检查。", "疗愈力增强，适合慢慢修复。", "焦虑可能放大不适，先确认真实情况。", "生命力回升，户外与阳光有帮助。", "旧问题适合复查并重新处理。", "身心进入整合期，保持稳定节奏。"],
+      education: ["先大胆探索，再确定学习路径。", "把工具和方法用起来，效率会提高。", "适合安静阅读、整理笔记和理解隐性规律。", "持续练习会带来稳定成长。", "制定清晰计划和复习纪律。", "跟随课程体系或老师指导更稳。", "选择科目、学校或方向时看长期匹配。", "冲刺阶段要集中目标。", "难题可用耐心拆解，不必硬碰硬。", "适合闭关复习和深度思考。", "考试运有变化，临场保持弹性。", "按评分标准和事实作答。", "暂时卡住时换方法学习。", "淘汰低效习惯，重建知识框架。", "劳逸结合能提升吸收率。", "警惕拖延、沉迷和逃避压力。", "旧知识体系可能崩塌，重新打基础。", "信心恢复，适合长期备考。", "不确定题目先排除干扰。", "成果可见，适合展示作品或应考。", "复盘错题和过往经验会有突破。", "阶段学习目标有望完成。"]
+    };
+
+    const suitBlueprints = {
+      Wands: {
+        zh: "权杖", element: "火元素", glyph: "♣", astrology: "火象星座 / 行动力",
+        theme: "热情、创造、竞争与行动意志",
+        meanings: ["灵感点燃", "远景规划", "初步扩张", "庆祝稳定", "竞争磨合", "胜利凯旋", "坚守阵地", "快速推进", "韧性防守", "压力临界", "热情信使", "冒险骑士", "创造王后", "领导国王"]
+      },
+      Cups: {
+        zh: "圣杯", element: "水元素", glyph: "♡", astrology: "水象星座 / 情感流动",
+        theme: "情绪、关系、直觉与疗愈",
+        meanings: ["情感新生", "双向联结", "欢聚支持", "情绪停滞", "失落整理", "温柔回忆", "幻想选择", "转身寻找", "心愿满足", "情感圆满", "敏感信使", "浪漫骑士", "慈悲王后", "成熟国王"]
+      },
+      Swords: {
+        zh: "宝剑", element: "风元素", glyph: "✧", astrology: "风象星座 / 思维判断",
+        theme: "理性、冲突、沟通与真相",
+        meanings: ["真相突破", "僵局抉择", "心痛分离", "休息修复", "争执代价", "过渡远行", "策略保留", "自我限制", "焦虑失眠", "低谷终结", "好奇信使", "迅捷骑士", "清醒王后", "公正国王"]
+      },
+      Pentacles: {
+        zh: "星币", element: "土元素", glyph: "✪", astrology: "土象星座 / 现实资源",
+        theme: "金钱、身体、学习与现实成果",
+        meanings: ["资源种子", "平衡调度", "协作工艺", "守成控制", "匮乏考验", "慷慨互助", "耐心评估", "专注精进", "独立丰盛", "家族稳定", "踏实信使", "稳健骑士", "丰饶王后", "务实国王"]
+      }
+    };
+
+    const rankBlueprints = [
+      ["ace", "Ace", "一", "数字 1（代表开端、种子与新机会）", 5],
+      ["two", "2", "二", "数字 2（代表选择、平衡与互动）", 4],
+      ["three", "3", "三", "数字 3（代表扩张、表达与协作）", 5],
+      ["four", "4", "四", "数字 4（代表稳定、结构与停顿）", 4],
+      ["five", "5", "五", "数字 5（代表挑战、冲突与调整）", 3],
+      ["six", "6", "六", "数字 6（代表复原、支持与阶段胜利）", 5],
+      ["seven", "7", "七", "数字 7（代表试炼、防卫与突破）", 4],
+      ["eight", "8", "八", "数字 8（代表速度、循环与专注练习）", 5],
+      ["nine", "9", "九", "数字 9（代表累积、临界与个人完成）", 5],
+      ["ten", "10", "十", "数字 10（代表完成、压力释放与循环转换）", 4],
+      ["page", "Page", "侍从", "宫廷牌侍从（代表学习、讯息与新手能量）", 4],
+      ["knight", "Knight", "骑士", "宫廷牌骑士（代表推进、追求与行动风格）", 5],
+      ["queen", "Queen", "王后", "宫廷牌王后（代表接纳、滋养与内在掌控）", 6],
+      ["king", "King", "国王", "宫廷牌国王（代表成熟、秩序与外在掌控）", 6]
+    ];
+
+    function makeMajorCards() {
+      return majorBlueprints.map((m, index) => ({
+        id: m[0],
+        name: m[1],
+        type: "Major",
+        suit: "Major Arcana",
+        number: m[2],
+        glyph: "✦",
+        element: m[3],
+        astrology: m[4],
+        numerology: m[5],
+        symbology: m[6],
+        general_meaning: m[7],
+        love_meaning: categoryMeanings.love[index],
+        career_meaning: categoryMeanings.career[index],
+        wealth_meaning: categoryMeanings.wealth[index],
+        health_meaning: categoryMeanings.health[index],
+        education_meaning: categoryMeanings.education[index],
+        score: m[8]
+      }));
+    }
+
+    function makeMinorCards() {
+      const cards = [];
+      Object.keys(suitBlueprints).forEach((suit) => {
+        const suitData = suitBlueprints[suit];
+        rankBlueprints.forEach((rank, index) => {
+          const name = suitData.zh + rank[2];
+          const theme = suitData.meanings[index];
+          cards.push({
+            id: suit.toLowerCase() + "_" + rank[0],
+            name,
+            type: "Minor",
+            suit,
+            number: rank[1],
+            glyph: suitData.glyph,
+            element: suitData.element,
+            astrology: suitData.astrology,
+            numerology: rank[3],
+            symbology: `${name}以「${theme}」为核心图像，结合${suitData.theme}，提示你观察当下能量如何流动。`,
+            general_meaning: `${name}代表${theme}。它提醒你在${suitData.theme}之间找到可执行的节奏，不被一时情绪或压力带偏。`,
+            love_meaning: minorSpecific("感情", name, theme, suit),
+            career_meaning: minorSpecific("事业", name, theme, suit),
+            wealth_meaning: minorSpecific("财富", name, theme, suit),
+            health_meaning: minorSpecific("健康", name, theme, suit),
+            education_meaning: minorSpecific("学业", name, theme, suit),
+            score: rank[4]
+          });
+        });
+      });
+      return cards;
+    }
+
+    function minorSpecific(field, name, theme, suit) {
+      const suitAdvice = {
+        Wands: "主动性是钥匙，但要避免只凭热度推进。",
+        Cups: "情绪和感受值得被认真安放，温柔沟通会打开空间。",
+        Swords: "先澄清事实与边界，清楚表达比猜测更有力量。",
+        Pentacles: "把想法落到日程、预算和身体节奏里，现实会给你回声。"
+      };
+      return `${field}层面，${name}显示「${theme}」正在影响结果。${suitAdvice[suit]}`;
+    }
+
+    const tarotDeck = [...makeMajorCards(), ...makeMinorCards()];
+
+    const tarotReaderBrain = {
+      method: [
+        "先抽取用户原话里的对象、事件、担忧、时间点、选择题和真正想验证的问题。",
+        "再判断用户表面问题下的心理动因：想确认、想挽回、想选择、想避险、想证明，或想获得行动许可。",
+        "把抽到的牌拆成光面、阴影、行动姿态三层，并说明为什么这张牌正好回应这个问题。",
+        "回答时必须落到用户的具体语境，不要只说桃花、财富、事业等大类运势。",
+        "最后给出可以执行的小动作、要避免的反应模式，以及一句带有牌面气质的总结。"
+      ],
+      antiGenericRules: [
+        "禁止只写保持耐心、听从内心、顺其自然、会有转机这类空泛句。",
+        "每个核心段落至少要绑定一个用户原话细节或一个牌面符号。",
+        "如果用户描述里出现人物、关系、金钱、工作节点、考试、疾病、选择或时间压力，必须点名回应。",
+        "不同牌必须体现不同逻辑：圣杯看情绪流动，宝剑看信息与判断，权杖看行动与竞争，星币看现实成本与稳定性，大阿卡纳看阶段课题。",
+        "不要做绝对预言；用倾向、风险、条件、下一步来表达。"
+      ],
+      suits: {
+        Wands: "权杖内核：欲望、行动、竞争、热度与推进速度。解读重点看用户是否正在急着证明自己、抢机会、争主动权，或被外部竞争推着走。",
+        Cups: "圣杯内核：情绪、关系、依恋、投射与疗愈。解读重点看用户是在问对方感受，还是在问自己是否被珍惜、是否该继续投入。",
+        Swords: "宝剑内核：事实、沟通、误解、判断与切割。解读重点看信息是否不透明、表达是否伤人、是否需要把情绪和证据分开。",
+        Pentacles: "星币内核：现实条件、金钱、身体、学习成果与长期稳定。解读重点看成本、时间、可持续性和是否有具体落地步骤。"
+      },
+      ranks: {
+        ace: "Ace 内核：新机会刚出现，重点判断种子是否值得培育，而不是立刻要求结果。",
+        two: "2 内核：选择、互动、平衡，重点判断双方或两个选项之间的真实权重。",
+        three: "3 内核：扩展、协作、表达，重点判断是否需要第三方、团队或公开表达。",
+        four: "4 内核：稳定、停滞、边界，重点判断安全感是保护还是束缚。",
+        five: "5 内核：冲突、损耗、考验，重点判断问题的代价和必须面对的矛盾。",
+        six: "6 内核：恢复、馈赠、阶段性胜利，重点判断支持从哪里来以及如何接住它。",
+        seven: "7 内核：防卫、策略、信念测试，重点判断你该坚持什么、又该停止防御什么。",
+        eight: "8 内核：速度、循环、专注，重点判断是否该加速、练习或从重复模式中脱身。",
+        nine: "9 内核：临界、个人成果、疲惫或满足，重点判断离结果还差哪一步。",
+        ten: "10 内核：完成、承压、循环结束，重点判断什么已经到上限、需要释放或收尾。",
+        page: "侍从内核：消息、新手、试探，重点判断线索是否真实，以及如何小步验证。",
+        knight: "骑士内核：推进方式、追求、冲动，重点判断速度与方向是否匹配。",
+        queen: "王后内核：接纳、滋养、内在掌控，重点判断如何守住价值而不失温度。",
+        king: "国王内核：成熟、规则、外在掌控，重点判断如何做决定、定规则、承担后果。"
+      },
+      majors: {
+        major_00_fool: "愚人内核：未知开局、信任跳跃、经验不足。适合分析是否该开始、是否太天真、第一步如何安全落地。",
+        major_01_magician: "魔术师内核：资源整合、表达能力、主动显化。适合分析如何把已有条件转成结果，也警惕操控和包装。",
+        major_02_high_priestess: "女祭司内核：隐藏信息、直觉、沉默。适合分析暧昧、秘密、不透明局面，重点是先观察再回应。",
+        major_03_empress: "皇后内核：滋养、吸引、成长。适合分析关系温度、创作成果、被爱与自我价值。",
+        major_04_emperor: "皇帝内核：秩序、边界、控制。适合分析责任、权力、规则和关系里的安全感结构。",
+        major_05_hierophant: "教皇内核：传统、承诺、制度、导师。适合分析长期关系、合规路径、学习体系与外部认可。",
+        major_06_lovers: "恋人内核：选择、价值一致、吸引。适合分析关系是否互选，以及选择背后的代价。",
+        major_07_chariot: "战车内核：目标、意志、推进。适合分析是否该主动出击，以及如何统合拉扯。",
+        major_08_strength: "力量内核：温柔控制、本能、耐心。适合分析情绪管理、关系修复、长期坚持。",
+        major_09_hermit: "隐士内核：独处、沉淀、寻找答案。适合分析是否需要暂退、复盘和看清真正需求。",
+        major_10_wheel: "命运之轮内核：周期、转折、机会窗口。适合分析变化期、时机和不可控因素。",
+        major_11_justice: "正义内核：因果、公平、事实。适合分析合同、承诺、责任分配和关系中的公平感。",
+        major_12_hanged: "倒吊人内核：暂停、牺牲、换视角。适合分析卡住的事、等待和以退为进。",
+        major_13_death: "死神内核：结束、蜕变、旧模式死亡。适合分析断舍离、关系转折和职业转换。",
+        major_14_temperance: "节制内核：调和、修复、节奏。适合分析磨合、复合、身心恢复和资源整合。",
+        major_15_devil: "恶魔内核：执念、诱惑、依赖、被束缚。适合分析上瘾关系、金钱诱惑、控制和恐惧。",
+        major_16_tower: "高塔内核：崩塌、真相爆破、旧结构失效。适合分析突发冲突、分手、辞职和风险暴露。",
+        major_17_star: "星星内核：希望、疗愈、远方愿景。适合分析信心恢复、长期愿望和柔和修复。",
+        major_18_moon: "月亮内核：迷雾、焦虑、潜意识、真假难辨。适合分析暧昧、猜测、不确定信息和自我欺骗。",
+        major_19_sun: "太阳内核：清晰、公开、成功、生命力。适合分析明朗结果、展示、坦诚沟通。",
+        major_20_judgement: "审判内核：复盘、觉醒、回应召唤。适合分析旧事重提、复合、职业使命和重大决定。",
+        major_21_world: "世界内核：完成、整合、圆满。适合分析阶段结束、毕业、达成目标和进入下一轮。"
+      }
+    };
+
+    const spreadDefinitions = {
+      single: {
+        label: "单张牌",
+        description: "适合快速解惑、每日运势或明确的小问题。系统会聚焦一张牌的核心提示。",
+        slots: [
+          { name: "核心答案", meaning: "此刻最重要的讯息", x: 50, y: 50 }
+        ]
+      },
+      story3: {
+        label: "三张故事流",
+        description: "无固定结构，把 3 张牌串成一条发展线，适合想看事情如何展开。",
+        slots: [
+          { name: "起点能量", meaning: "问题的开端与当前底色", x: 25, y: 50 },
+          { name: "发展线索", meaning: "事情正在如何推进", x: 50, y: 50 },
+          { name: "落点提示", meaning: "下一阶段最可能显现的重点", x: 75, y: 50 }
+        ]
+      },
+      three_time: {
+        label: "三牌阵：过去 / 现在 / 未来",
+        description: "经典时间流牌阵，适合看某件事从根源到趋势的演变。",
+        slots: [
+          { name: "过去", meaning: "造成现状的根源或旧模式", x: 25, y: 50 },
+          { name: "现在", meaning: "当前正在发生的核心状态", x: 50, y: 50 },
+          { name: "未来", meaning: "若按当前能量发展，接下来会出现的趋势", x: 75, y: 50 }
+        ]
+      },
+      three_status: {
+        label: "三牌阵：现状 / 阻碍 / 建议",
+        description: "万能问题分析牌阵，适合工作、感情、学业、财富和具体问事。",
+        slots: [
+          { name: "现状", meaning: "你真正处在什么局面", x: 25, y: 50 },
+          { name: "阻碍", meaning: "让问题卡住的关键点", x: 50, y: 50 },
+          { name: "建议", meaning: "最值得采取的行动方向", x: 75, y: 50 }
+        ]
+      },
+      cross4: {
+        label: "十字牌阵（4张）",
+        description: "看现状、阻碍、外部环境和可能结果，适合需要快速全局判断的问题。",
+        slots: [
+          { name: "现状", meaning: "问题的当前核心", x: 50, y: 50 },
+          { name: "阻碍", meaning: "横在问题前方的困难", x: 50, y: 24 },
+          { name: "外部环境", meaning: "他人、资源或现实条件的影响", x: 24, y: 50 },
+          { name: "可能结果", meaning: "当前路径下较可能出现的落点", x: 76, y: 50 }
+        ]
+      },
+      holy_triangle: {
+        label: "圣三角牌阵",
+        description: "情感与关系常用牌阵，看过去基础、现在状态和未来走向。",
+        slots: [
+          { name: "过去基础", meaning: "这段关系或问题的根基", x: 50, y: 22 },
+          { name: "现在状况", meaning: "双方或事件目前的真实状态", x: 30, y: 68 },
+          { name: "未来结果", meaning: "关系或事件接下来的走向", x: 70, y: 68 }
+        ]
+      },
+      choice5: {
+        label: "二择一 V 字牌阵（5张）",
+        description: "适合要不要分手、选 A 还是 B、是否跳槽等选择题。",
+        slots: [
+          { name: "核心考量", meaning: "这次选择真正需要解决的问题", x: 50, y: 20 },
+          { name: "选项 A 路径", meaning: "选择 A 后的过程与代价", x: 31, y: 46 },
+          { name: "选项 A 结果", meaning: "选择 A 的可能落点", x: 20, y: 75 },
+          { name: "选项 B 路径", meaning: "选择 B 后的过程与代价", x: 69, y: 46 },
+          { name: "选项 B 结果", meaning: "选择 B 的可能落点", x: 80, y: 75 }
+        ]
+      },
+      venus7: {
+        label: "维纳斯爱之神牌阵（7张）",
+        description: "深度关系牌阵，适合恋爱、暧昧、复合、人际纠葛。",
+        slots: [
+          { name: "你的心态", meaning: "你对对方或关系的真实状态", x: 50, y: 16 },
+          { name: "对方心态", meaning: "对方目前的感受或姿态", x: 24, y: 36 },
+          { name: "关系现状", meaning: "你们之间实际正在发生什么", x: 76, y: 36 },
+          { name: "外在阻碍", meaning: "环境、距离、现实压力或第三方影响", x: 24, y: 64 },
+          { name: "隐藏信息", meaning: "没有说出口的想法、顾虑或盲区", x: 76, y: 64 },
+          { name: "相处建议", meaning: "关系最需要被调整的方式", x: 38, y: 84 },
+          { name: "感情走向", meaning: "当前能量下的关系趋势", x: 62, y: 84 }
+        ]
+      },
+      hexagram7: {
+        label: "六芒星牌阵（7张）",
+        description: "分析因果、主观意愿与客观环境的冲突，适合项目、运势和中长期问题。",
+        slots: [
+          { name: "过去原因", meaning: "形成当前局面的因", x: 50, y: 12 },
+          { name: "现在状态", meaning: "事情目前的真实状态", x: 25, y: 32 },
+          { name: "未来趋势", meaning: "能量自然发展后的方向", x: 75, y: 32 },
+          { name: "主观意愿", meaning: "你内在真正想推动的方向", x: 25, y: 66 },
+          { name: "客观环境", meaning: "现实条件与外部力量", x: 75, y: 66 },
+          { name: "冲突焦点", meaning: "主观与客观之间的卡点", x: 50, y: 50 },
+          { name: "综合结果", meaning: "整组牌汇合后的最终提示", x: 50, y: 88 }
+        ]
+      },
+      celtic10: {
+        label: "凯尔特十字牌阵（10张）",
+        description: "深度大阵，适合复杂关系、事业转折、人生卡点和全方位分析。",
+        slots: [
+          { name: "核心问题", meaning: "当下最核心的主题", x: 34, y: 46 },
+          { name: "当下阻碍", meaning: "覆盖核心、让问题变复杂的力量", x: 34, y: 66 },
+          { name: "潜意识", meaning: "你心底真正害怕或渴望的东西", x: 34, y: 78 },
+          { name: "显意识", meaning: "你表面上认为自己想要的方向", x: 34, y: 18 },
+          { name: "过去根源", meaning: "影响现在的旧经验或旧决定", x: 14, y: 46 },
+          { name: "近期发展", meaning: "短期内会靠近的事件或趋势", x: 54, y: 46 },
+          { name: "自我认知", meaning: "你怎么看待自己在这件事里的位置", x: 78, y: 82 },
+          { name: "环境影响", meaning: "他人、现实条件或外部评价", x: 78, y: 60 },
+          { name: "恐惧与渴望", meaning: "你最在意却不一定承认的部分", x: 78, y: 38 },
+          { name: "长远结果", meaning: "整件事更远的落点", x: 78, y: 16 }
+        ]
+      },
+      zodiac12: {
+        label: "黄道十二宫牌阵（12张）",
+        description: "年运/月运和全局运势牌阵，按十二宫位看人生不同面向。",
+        slots: [
+          { name: "第一宫 自我", meaning: "自我状态与整体气场", x: 50, y: 12 },
+          { name: "第二宫 财富", meaning: "金钱、资源与安全感", x: 70, y: 17 },
+          { name: "第三宫 沟通", meaning: "表达、学习与短途信息", x: 85, y: 32 },
+          { name: "第四宫 家庭", meaning: "家宅、根基与内在安全", x: 90, y: 52 },
+          { name: "第五宫 恋爱", meaning: "桃花、创造力与愉悦", x: 80, y: 72 },
+          { name: "第六宫 健康", meaning: "身体、工作日常与习惯", x: 62, y: 86 },
+          { name: "第七宫 关系", meaning: "伴侣、合作与对手", x: 38, y: 86 },
+          { name: "第八宫 转化", meaning: "共同资源、风险与深层变化", x: 20, y: 72 },
+          { name: "第九宫 远方", meaning: "远行、进修、信念与视野", x: 10, y: 52 },
+          { name: "第十宫 事业", meaning: "事业、名望与目标", x: 15, y: 32 },
+          { name: "第十一宫 人脉", meaning: "朋友、社群与愿景", x: 30, y: 17 },
+          { name: "第十二宫 潜意识", meaning: "隐秘压力、梦境与疗愈", x: 50, y: 50 }
+        ]
+      }
+    };
+
+    let selectedCard = null;
+    let selectedCards = [];
+    let selectedSpread = "single";
+    let selectedCategory = "love";
+    let userQuestion = "";
+    let ratingValue = 0;
+    let aiReading = null;
+    let aiReadingLoading = false;
+
+    const panels = Array.from(document.querySelectorAll(".panel"));
+    const steps = Array.from(document.querySelectorAll(".tab-step"));
+    const questionInput = document.getElementById("questionInput");
+    const questionCount = document.getElementById("questionCount");
+    const feedbackInput = document.getElementById("feedbackInput");
+    const feedbackCount = document.getElementById("feedbackCount");
+    const geminiKeyInput = document.getElementById("geminiKeyInput");
+    const geminiModelInput = document.getElementById("geminiModelInput");
+    const llmSetupStatus = document.getElementById("llmSetupStatus");
+    const llmRevealStatus = document.getElementById("llmRevealStatus");
+    const spreadSelect = document.getElementById("spreadSelect");
+    const spreadDescription = document.getElementById("spreadDescription");
+    const drawLabel = document.getElementById("drawLabel");
+    const drawHint = document.getElementById("drawHint");
+
+    function showTab(index) {
+      panels.forEach((panel, i) => panel.classList.toggle("active", i === index));
+      steps.forEach((step, i) => step.classList.toggle("active", i === index));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function updateCounter(input, target) {
+      target.textContent = input.value.length + "/" + input.maxLength;
+    }
+
+    function getSpreadDefinition() {
+      return spreadDefinitions[selectedSpread] || spreadDefinitions.single;
+    }
+
+    function initSpreadSelect() {
+      Object.keys(spreadDefinitions).forEach((key) => {
+        const option = document.createElement("option");
+        const spread = spreadDefinitions[key];
+        option.value = key;
+        option.textContent = `${spread.label}（${spread.slots.length}张）`;
+        spreadSelect.appendChild(option);
+      });
+      spreadSelect.value = selectedSpread;
+      updateSpreadDescription();
+    }
+
+    function updateSpreadDescription() {
+      selectedSpread = spreadSelect.value || "single";
+      const spread = getSpreadDefinition();
+      spreadDescription.textContent = spread.description;
+      drawLabel.textContent = `按下猫爪，召唤${spread.slots.length}张牌`;
+      drawHint.textContent = `${spread.label}会以正位展示。系统会把每张牌的牌位、牌意和你的原话一起交给 Gemini 综合分析。`;
+    }
+
+    function drawCards(count) {
+      const pool = tarotDeck.slice();
+      const cards = [];
+      for (let i = 0; i < count && pool.length; i++) {
+        const seed = Date.now() + Math.floor(Math.random() * 100000) + i * 97;
+        const index = seed % pool.length;
+        cards.push(pool.splice(index, 1)[0]);
+      }
+      return cards;
+    }
+
+    function randomCard() {
+      return drawCards(1)[0];
+    }
+
+    function heartWingSvg(on) {
+      const fill = on ? "#f08ab2" : "#decbd0";
+      const wing = on ? "#f8d7e5" : "#e8dde1";
+      return `
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M20 26C12 20 7 20 3 25c7 1 10 5 14 12" fill="${wing}"/>
+          <path d="M44 26c8-6 13-6 17-1-7 1-10 5-14 12" fill="${wing}"/>
+          <path d="M32 50S14 39 14 26c0-6 4-10 10-10 4 0 7 2 8 5 1-3 4-5 8-5 6 0 10 4 10 10 0 13-18 24-18 24z" fill="${fill}" stroke="#c98769" stroke-width="2"/>
+        </svg>`;
+    }
+
+    function renderScore(score) {
+      const scoreIcons = document.getElementById("scoreIcons");
+      document.getElementById("scoreText").textContent = score + " / 7";
+      scoreIcons.innerHTML = "";
+      for (let i = 1; i <= 7; i++) {
+        const item = document.createElement("span");
+        item.className = "heart-wing" + (i <= score ? " on" : "");
+        item.innerHTML = heartWingSvg(i <= score);
+        scoreIcons.appendChild(item);
+      }
+    }
+
+    function truncateText(text, limit) {
+      if (!text) return "";
+      return text.length > limit ? text.slice(0, limit - 1) + "…" : text;
+    }
+
+    function getRankKey(card) {
+      return card.type === "Minor" ? card.id.split("_")[1] : "";
+    }
+
+    function getCardProfile(card) {
+      if (card.type === "Major") {
+        return tarotReaderBrain.majors[card.id] || "大阿卡纳内核：阶段性人生课题，重点看用户正在经历的转折、选择和成长主题。";
+      }
+      const rankKey = getRankKey(card);
+      return [
+        tarotReaderBrain.suits[card.suit],
+        tarotReaderBrain.ranks[rankKey],
+        `当前牌面关键词：${card.name}、${card.element}、${card.symbology}`
+      ].join("\n");
+    }
+
+    function getDrawnSpreadCards() {
+      const spread = getSpreadDefinition();
+      return spread.slots.map((slot, index) => ({
+        index,
+        slot,
+        card: selectedCards[index]
+      })).filter((item) => item.card);
+    }
+
+    function getFocusSpreadItem() {
+      const items = getDrawnSpreadCards();
+      const spread = getSpreadDefinition();
+      if (spread.slots.length === 1) return items[0];
+      return items.find((item) => /核心|现状|现在|关系现状/.test(item.slot.name)) || items[0];
+    }
+
+    function getSpreadScore() {
+      const cards = selectedCards.length ? selectedCards : [selectedCard].filter(Boolean);
+      if (!cards.length) return 0;
+      const total = cards.reduce((sum, card) => sum + card.score, 0);
+      return Math.max(1, Math.min(7, Math.round(total / cards.length)));
+    }
+
+    function formatSpreadCardsForPrompt() {
+      return getDrawnSpreadCards().map((item) => {
+        const card = item.card;
+        return [
+          `第${item.index + 1}张「${item.slot.name}」：${card.name}（正位）`,
+          `牌位含义：${item.slot.meaning}`,
+          `牌组：${card.type} / ${card.suit}`,
+          `元素：${card.element}`,
+          `占星：${card.astrology}`,
+          `数字密码学：${card.numerology}`,
+          `象征：${card.symbology}`,
+          `基础牌意：${card.general_meaning}`,
+          `专业内核：${getCardProfile(card)}`
+        ].join("\n");
+      }).join("\n\n");
+    }
+
+    function makeSpreadSnapshot() {
+      return getDrawnSpreadCards()
+        .map((item) => `${item.slot.name}=${item.card.name}`)
+        .join("；");
+    }
+
+    function extractQuestionSignals() {
+      const clean = userQuestion.replace(/\s+/g, " ").trim();
+      if (!clean) {
+        return {
+          phrases: ["用户没有填写具体叙述"],
+          intent: "先做整体能量观察",
+          tension: "缺少具体语境，解读需要偏向通用提醒"
+        };
+      }
+      const phrases = clean
+        .split(/[，。！？、；,.!?;：:\n]+/)
+        .map((item) => item.trim())
+        .filter((item) => item.length > 1)
+        .slice(0, 6);
+      const intentRules = [
+        ["复合|回来|联系|想他|想她|喜欢|桃花|暧昧|分手|对象", "关系确认或情感走向"],
+        ["辞职|跳槽|工作|老板|同事|项目|事业|offer|面试", "职业选择或工作压力"],
+        ["钱|财富|投资|收入|亏|债|买|卖|存款", "资源安全和收益判断"],
+        ["考试|学习|学业|成绩|申请|证书|论文", "学习结果和方法调整"],
+        ["健康|身体|病|睡眠|焦虑|疲惫|恢复", "身心状态和恢复节奏"],
+        ["应该|要不要|能不能|会不会|是否|选择|怎么办", "选择题或结果焦虑"]
+      ];
+      const intent = intentRules
+        .filter((rule) => new RegExp(rule[0], "i").test(clean))
+        .map((rule) => rule[1])
+        .join("、") || "具体处境判断";
+      const tension = phrases.length > 1
+        ? `主要矛盾集中在「${phrases.slice(0, 2).join(" / ")}」之间。`
+        : `主要矛盾集中在「${phrases[0]}」这件事上。`;
+      return { phrases, intent, tension };
+    }
+
+    function makeFallbackReading() {
+      const card = selectedCard;
+      const category = categoryMap[selectedCategory].label;
+      const specificKey = categoryMap[selectedCategory].key;
+      const signals = extractQuestionSignals();
+      const profile = getCardProfile(card);
+      const firstPhrase = signals.phrases[0];
+      const questionSummary = userQuestion
+        ? `你真正想确认的不是简单的「${category}」运势，而是「${truncateText(userQuestion, 110)}」背后的${signals.intent}。`
+        : `你尚未写下具体叙述，因此本次解读会先围绕「${category}」的整体能量展开。`;
+
+      return {
+        source: "local",
+        question_focus: questionSummary,
+        card_question_link: `${card.name}不是在泛泛回答「${category}」，而是在把你的问题推向这条牌面逻辑：${truncateText(profile, 170)}`,
+        hidden_pattern: userQuestion
+          ? `${signals.tension} 这张牌提醒你先分清“事实已经发生的部分”和“你担心会发生的部分”，否则会把焦虑当成答案。`
+          : "隐藏矛盾在于问题还没有被具体化，牌面只能先指出整体方向，无法替你判断某个明确对象或事件。",
+        tab2_specific_answer: `${questionSummary} ${card.name}提示：${card[specificKey]} 针对「${firstPhrase}」，这张牌更强调你要先看见当前局面的主导力量：是行动、情绪、事实还是现实成本。只有把这个主导力量处理清楚，后续选择才不会只是被不安推着走。`,
+        tab3_intro: `${card.name}回应了你的「${category}」主题。下面的建议会围绕「${truncateText(firstPhrase, 42)}」来落地，而不是只给大类运势。`,
+        do_items: [
+          `把「${truncateText(firstPhrase, 24)}」拆成事实、猜测、你能行动的部分。`,
+          `用${card.name}的牌意做一次现实校准：先完成一个能验证局面的小动作。`,
+          `围绕${card.element}的节奏安排下一步，行动后记录对方或环境的真实反馈。`
+        ],
+        avoid_items: [
+          `不要把「${truncateText(firstPhrase, 18)}」里的担心直接当成结论。`,
+          "不要为了立刻得到安全感而做不可逆决定。"
+        ],
+        fate_quote: quoteFor(card.score)
+      };
+    }
+
+    function getActiveReading() {
+      return aiReading || makeFallbackReading();
+    }
+
+    function setAiStatus(text, loading) {
+      llmSetupStatus.textContent = text;
+      llmRevealStatus.textContent = text;
+      llmSetupStatus.classList.toggle("loading", Boolean(loading));
+      llmRevealStatus.classList.toggle("loading", Boolean(loading));
+    }
+
+    function buildGeminiPrompt() {
+      const card = selectedCard;
+      const signals = extractQuestionSignals();
+      const profile = getCardProfile(card);
+      return [
+        "请以中文为用户做一份高水平塔罗单牌正位解读。请把塔罗当作自我反思和决策辅助工具，不要做绝对预言。",
+        "你不是运势模板生成器，而是资深塔罗分析师。你的任务是把用户原话、问题类别和抽到的牌进行逐点对应。",
+        "请只返回严格 JSON，不要 Markdown，不要代码块。",
+        "JSON 字段必须包含：question_focus, card_question_link, hidden_pattern, tab2_specific_answer, tab3_intro, do_items, avoid_items, fate_quote。",
+        "question_focus：80-150字，必须点名用户叙述中的至少2个具体线索；如果用户叙述很短，也要指出缺少什么信息。",
+        "card_question_link：120-240字，解释为什么这张牌回应这个问题，必须引用牌面元素、牌组/数字/宫廷或大阿卡纳原型。",
+        "hidden_pattern：100-220字，指出用户叙述背后的心理矛盾、行动卡点或现实风险，不能泛泛说焦虑。",
+        "tab2_specific_answer：240-460字，必须围绕用户具体叙述作答，说明当前倾向、条件、风险和下一步观察点。",
+        "tab3_intro：100-180字，承接分页2，说明行动指南的核心策略。",
+        "do_items 必须是 3 条字符串，每条 35-90 字，要能今天或本周执行，并且每条必须绑定用户问题或抽到的牌。",
+        "avoid_items 必须是 2 条字符串，每条 35-90 字，指出最该避免的反应模式。",
+        "fate_quote：一句 18-36 字的温柔金句，必须带有本牌气质。",
+        "",
+        "塔罗师分析流程：",
+        tarotReaderBrain.method.map((item, index) => `${index + 1}. ${item}`).join("\n"),
+        "",
+        "反模板规则：",
+        tarotReaderBrain.antiGenericRules.map((item, index) => `${index + 1}. ${item}`).join("\n"),
+        "",
+        "本次从用户原话预提取到的线索：",
+        `线索短句：${signals.phrases.join(" / ")}`,
+        `可能意图：${signals.intent}`,
+        `初步矛盾：${signals.tension}`,
+        "",
+        `用户选择类别：${categoryMap[selectedCategory].label}`,
+        `用户具体叙述：${userQuestion || "用户没有填写具体叙述"}`,
+        `抽到牌：${card.name}（正位）`,
+        `牌组：${card.type} / ${card.suit}`,
+        `元素：${card.element}`,
+        `占星：${card.astrology}`,
+        `数字密码学：${card.numerology}`,
+        `象征：${card.symbology}`,
+        `基础牌意：${card.general_meaning}`,
+        "",
+        "本牌专业分析内核：",
+        profile,
+        "",
+        "输出质量自检：如果你的回答换成另一张牌仍然成立，就说明太泛；请重写到能明显看出这就是本牌、这个用户、这个问题。"
+      ].join("\n");
+    }
+
+    function extractInteractionText(data) {
+      if (typeof data.output_text === "string") return data.output_text;
+      const chunks = [];
+      function visit(value) {
+        if (!value) return;
+        if (typeof value === "string") return;
+        if (Array.isArray(value)) {
+          value.forEach(visit);
+          return;
+        }
+        if (typeof value === "object") {
+          if (value.type === "text" && typeof value.text === "string") chunks.push(value.text);
+          Object.keys(value).forEach((key) => visit(value[key]));
+        }
+      }
+      visit(data.steps);
+      return chunks.join("\n").trim();
+    }
+
+    function parseGeminiJson(text) {
+      const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+      try {
+        return JSON.parse(cleaned);
+      } catch (error) {
+        const match = cleaned.match(/\{[\s\S]*\}/);
+        if (!match) throw error;
+        return JSON.parse(match[0]);
+      }
+    }
+
+    function normalizeGeminiReading(raw) {
+      const fallback = makeFallbackReading();
+      const doItems = Array.isArray(raw.do_items) ? raw.do_items.slice(0, 3) : fallback.do_items;
+      const avoidItems = Array.isArray(raw.avoid_items) ? raw.avoid_items.slice(0, 2) : fallback.avoid_items;
+      while (doItems.length < 3) doItems.push(fallback.do_items[doItems.length]);
+      while (avoidItems.length < 2) avoidItems.push(fallback.avoid_items[avoidItems.length]);
+      return {
+        source: "gemini",
+        question_focus: raw.question_focus || fallback.question_focus,
+        card_question_link: raw.card_question_link || fallback.card_question_link,
+        hidden_pattern: raw.hidden_pattern || fallback.hidden_pattern,
+        tab2_specific_answer: raw.tab2_specific_answer || fallback.tab2_specific_answer,
+        tab3_intro: raw.tab3_intro || fallback.tab3_intro,
+        do_items: doItems,
+        avoid_items: avoidItems,
+        fate_quote: raw.fate_quote || fallback.fate_quote
+      };
+    }
+
+    async function requestGeminiReading() {
+      const apiKey = geminiKeyInput.value.trim();
+      const model = geminiModelInput.value.trim() || "gemini-3.5-flash";
+      if (!apiKey) {
+        setAiStatus("未填写 Gemini API Key，已使用本地备用解读。", false);
+        return;
+      }
+
+      sessionStorage.setItem("tarotGeminiModel", model);
+      aiReadingLoading = true;
+      setAiStatus("Gemini 正在理解你的具体问题，并生成分页 2 与分页 3 的专属解读...", true);
+
+      try {
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+            "Api-Revision": "2026-05-20"
+          },
+          body: JSON.stringify({
+            model,
+            system_instruction: "你是资深塔罗分析师和问题拆解顾问。你的强项不是泛泛讲牌意，而是像做个案咨询一样，把用户原话中的人物、事件、担忧、选择和抽到的具体牌面逐项对应，给出有条件、有风险边界、可执行的解读。你不能复制模板话术，不能把不同牌解释成同一套话。",
+            input: buildGeminiPrompt(),
+            generation_config: {
+              temperature: 0.82,
+              thinking_level: "high",
+              max_output_tokens: 2600
+            }
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error && data.error.message ? data.error.message : "Gemini 请求失败");
+        }
+
+        const text = extractInteractionText(data);
+        aiReading = normalizeGeminiReading(parseGeminiJson(text));
+        setAiStatus("Gemini 深度解读已生成，分页 2 与分页 3 已更新。", false);
+      } catch (error) {
+        aiReading = null;
+        setAiStatus("Gemini 暂时不可用，已切换为本地备用解读：" + error.message, false);
+      } finally {
+        aiReadingLoading = false;
+        renderCard();
+      }
+    }
+
+    function renderCard() {
+      const card = selectedCard;
+      const reading = getActiveReading();
+      document.getElementById("cardNumber").textContent = card.number;
+      document.getElementById("cardGlyph").textContent = card.glyph;
+      document.getElementById("cardName").textContent = card.name;
+      document.getElementById("cardSub").textContent = "正位 · " + card.type + " · " + card.suit;
+      document.getElementById("meaningTitle").textContent = card.name;
+      document.getElementById("elementText").textContent = card.element;
+      document.getElementById("astrologyText").textContent = card.astrology;
+      document.getElementById("numerologyText").textContent = card.numerology;
+      document.getElementById("symbologyText").textContent = card.symbology;
+      document.getElementById("generalText").textContent = card.general_meaning;
+      document.getElementById("focusText").textContent = reading.question_focus;
+      document.getElementById("cardLinkText").textContent = reading.card_question_link;
+      document.getElementById("patternText").textContent = reading.hidden_pattern;
+      document.getElementById("specificText").textContent = reading.tab2_specific_answer;
+      renderScore(card.score);
+      renderAdvice();
+    }
+
+    function renderAdvice() {
+      const reading = getActiveReading();
+      document.getElementById("adviceIntro").textContent = reading.tab3_intro;
+      fillList("doList", reading.do_items);
+      fillList("avoidList", reading.avoid_items);
+      document.getElementById("fateQuote").textContent = reading.fate_quote;
+    }
+
+    function fillList(id, items) {
+      const list = document.getElementById(id);
+      list.innerHTML = "";
+      items.forEach((text) => {
+        const li = document.createElement("li");
+        li.textContent = text;
+        list.appendChild(li);
+      });
+    }
+
+    function quoteFor(score) {
+      if (score >= 7) return "愿你的命运如星光般明亮，也愿你配得上这份正在靠近的好运。";
+      if (score >= 5) return "愿温柔的光照在你的道路上，让每一步都比昨日更清楚。";
+      if (score >= 3) return "愿你在迷雾里仍记得方向，慢慢走，也会抵达属于你的清晨。";
+      return "愿突来的风只吹落旧尘，不吹灭你心里仍在发光的火。";
+    }
+
+    function setRating(value) {
+      ratingValue = value;
+      Array.from(document.querySelectorAll(".star-btn")).forEach((star, index) => {
+        star.classList.toggle("on", index < value);
+      });
+    }
+
+    function resetAll() {
+      selectedCard = null;
+      selectedCategory = "love";
+      userQuestion = "";
+      ratingValue = 0;
+      aiReading = null;
+      aiReadingLoading = false;
+      questionInput.value = "";
+      feedbackInput.value = "";
+      document.getElementById("emailInput").value = "";
+      document.getElementById("sendStatus").textContent = "";
+      document.querySelector('input[name="category"][value="love"]').checked = true;
+      document.querySelectorAll(".choice").forEach((choice) => {
+        choice.classList.toggle("selected", choice.querySelector("input").value === "love");
+      });
+      updateCounter(questionInput, questionCount);
+      updateCounter(feedbackInput, feedbackCount);
+      setRating(0);
+      setAiStatus("未连接 Gemini 时，将使用本地备用解读。", false);
+      showTab(0);
+    }
+
+    document.getElementById("categoryGrid").addEventListener("change", (event) => {
+      if (event.target.name === "category") {
+        selectedCategory = event.target.value;
+        document.querySelectorAll(".choice").forEach((choice) => {
+          choice.classList.toggle("selected", choice.querySelector("input").checked);
+        });
+      }
+    });
+
+    questionInput.addEventListener("input", () => updateCounter(questionInput, questionCount));
+    feedbackInput.addEventListener("input", () => updateCounter(feedbackInput, feedbackCount));
+    geminiKeyInput.addEventListener("input", () => {
+      const hasKey = Boolean(geminiKeyInput.value.trim());
+      llmSetupStatus.textContent = hasKey ? "Gemini 已准备好在抽牌后理解你的具体问题。" : "未连接 Gemini 时，将使用本地备用解读。";
+      llmSetupStatus.classList.remove("loading");
+    });
+    geminiModelInput.addEventListener("input", () => {
+      sessionStorage.setItem("tarotGeminiModel", geminiModelInput.value.trim() || "gemini-3.5-flash");
+    });
+
+    document.getElementById("drawButton").addEventListener("click", () => {
+      selectedCategory = document.querySelector('input[name="category"]:checked').value;
+      userQuestion = questionInput.value.trim();
+      selectedCard = randomCard();
+      aiReading = null;
+      renderCard();
+      showTab(1);
+      requestGeminiReading();
+    });
+
+    document.querySelectorAll("[data-go]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = Number(button.getAttribute("data-go"));
+        if (!selectedCard && target > 0) {
+          selectedCard = randomCard();
+          renderCard();
+        }
+        showTab(target);
+      });
+    });
+
+    const ratingStars = document.getElementById("ratingStars");
+    for (let i = 1; i <= 5; i++) {
+      const star = document.createElement("button");
+      star.type = "button";
+      star.className = "star-btn";
+      star.textContent = "★";
+      star.setAttribute("aria-label", i + "星");
+      star.addEventListener("click", () => setRating(i));
+      ratingStars.appendChild(star);
+    }
+
+    document.getElementById("sendButton").addEventListener("click", () => {
+      const email = document.getElementById("emailInput").value.trim();
+      const status = document.getElementById("sendStatus");
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        status.textContent = "请先输入有效邮箱地址。";
+        return;
+      }
+      status.textContent = "报告正在生成中...";
+      window.setTimeout(() => {
+        status.textContent = `发送成功。系统已模拟将「${selectedCard ? selectedCard.name : "塔罗"}」报告投递至 ${email}。`;
+      }, 850);
+    });
+
+    document.getElementById("resetButton").addEventListener("click", resetAll);
+    geminiModelInput.value = sessionStorage.getItem("tarotGeminiModel") || geminiModelInput.value;
+    updateCounter(questionInput, questionCount);
+    updateCounter(feedbackInput, feedbackCount);
+    setRating(0);
+  </script>
+
+
+</body></html>
