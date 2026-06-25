@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<!-- saved from url=(0105)file:///C:/Users/cssan/Documents/Codex/2026-06-25/target-driven-3-column-tracker-codex/outputs/index.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Target-Driven 3-Column Tracker</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050505;
+      --panel: #0d0d0b;
+      --panel-2: #15120d;
+      --line: rgba(234, 198, 114, 0.22);
+      --line-strong: rgba(234, 198, 114, 0.55);
+      --text: #f8f4e8;
+      --muted: #a8a091;
+      --gold: #e7c46d;
+      --red: #ff4d4f;
+      --amber: #ffa940;
+      --blue: #1890ff;
+      --green: #52c41a;
+      --gray: #8c8c8c;
+      --radius: 8px;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+      font-family: Inter, "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(231, 196, 109, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(231, 196, 109, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 50% 18%, rgba(231, 196, 109, 0.08), transparent 34%),
+        var(--bg);
+      background-size: 38px 38px, 38px 38px, auto, auto;
+      color: var(--text);
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: #12100c;
+      color: var(--text);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+    }
+
+    button:hover {
+      border-color: var(--line-strong);
+      background: #1b160f;
+    }
+
+    button:active { transform: translateY(1px); }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #070706;
+      color: var(--text);
+      border-radius: 6px;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(231, 196, 109, 0.12);
+    }
+
+    .app {
+      width: min(1680px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(340px, 1fr) minmax(620px, 2fr);
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .left,
+    .right-top,
+    .idea,
+    .goals {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(21, 18, 13, 0.96), rgba(8, 8, 7, 0.98));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .left {
+      min-height: calc(100vh - 24px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .right {
+      min-height: calc(100vh - 24px);
+      display: grid;
+      grid-template-rows: minmax(520px, 1.2fr) minmax(260px, 0.8fr);
+      gap: 12px;
+    }
+
+    .bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7, 7, 6, 0.72);
+    }
+
+    .title-wrap {
+      min-width: 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--gold);
+      font-size: 12px;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1, h2 {
+      margin: 0;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      white-space: nowrap;
+    }
+
+    h2 { font-size: 18px; }
+
+    .page-actions {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 8;
+      display: flex;
+      gap: 7px;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(5, 5, 5, 0.82);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+
+    .page-actions .icon-btn {
+      color: var(--gold);
+      font-size: 17px;
+    }
+
+    .page-actions .icon-btn:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+    }
+
+    .month-editor {
+      display: grid;
+      grid-template-columns: minmax(82px, 96px) minmax(72px, 90px);
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .month-editor input,
+    .month-editor select {
+      height: 32px;
+      padding: 0 8px;
+      color: var(--gold);
+      background: #080706;
+    }
+
+    .month-field {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 4px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #080706;
+      padding-right: 8px;
+    }
+
+    .month-field input {
+      height: 32px;
+      padding: 0 8px;
+      color: var(--gold);
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
+    .month-field input:focus {
+      box-shadow: none;
+    }
+
+    .month-field span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bazi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 32px);
+      gap: 5px;
+      flex: 0 0 auto;
+    }
+
+    .pillar {
+      display: grid;
+      place-items: center;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--gold);
+      background: #090806;
+      font-weight: 700;
+    }
+
+    .month-stats {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stat-line {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .big-progress {
+      height: 10px;
+      border-radius: 999px;
+      background: #201c15;
+      overflow: hidden;
+      border: 1px solid rgba(234, 198, 114, 0.16);
+    }
+
+    .big-progress span,
+    .day-progress span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #926f25, var(--gold), #f6e1a0);
+      border-radius: inherit;
+      transition: width 220ms ease;
+    }
+
+    .timeline {
+      overflow: auto;
+      padding: 10px;
+    }
+
+    .day-row {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.018);
+      cursor: pointer;
+    }
+
+    .day-row + .day-row { margin-top: 8px; }
+
+    .day-row:hover,
+    .day-row.active {
+      border-color: var(--line-strong);
+      background: rgba(231, 196, 109, 0.065);
+    }
+
+    .day-badge {
+      display: grid;
+      place-items: center;
+      height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--gold);
+      background: #080706;
+      font-weight: 800;
+    }
+
+    .day-meta {
+      min-width: 0;
+    }
+
+    .day-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 7px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .day-progress {
+      height: 7px;
+      border-radius: 999px;
+      background: #211d16;
+      overflow: hidden;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 8px;
+      min-height: 18px;
+    }
+
+    .chip {
+      max-width: 100%;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-wrap {
+      height: calc(100% - 69px);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      color: var(--gold);
+      font-size: 12px;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .calendar {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(72px, 1fr));
+      grid-auto-rows: minmax(78px, 1fr);
+      gap: 6px;
+    }
+
+    .cal-blank,
+    .cal-day {
+      border-radius: 7px;
+      min-width: 0;
+    }
+
+    .cal-blank {
+      border: 1px dashed rgba(234, 198, 114, 0.08);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .cal-day {
+      position: relative;
+      border: 1px solid var(--line);
+      background: #090807;
+      padding: 24px 8px 8px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .cal-day:hover,
+    .cal-day.active {
+      border-color: var(--line-strong);
+      background: #15110c;
+    }
+
+    .day-num {
+      position: absolute;
+      top: 6px;
+      right: 7px;
+      min-width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(248, 244, 232, 0.18);
+      border-radius: 999px;
+      color: #ffffff;
+      background: rgba(0, 0, 0, 0.54);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .cal-progress {
+      position: absolute;
+      left: 8px;
+      right: 36px;
+      top: 12px;
+      height: 4px;
+      border-radius: 999px;
+      background: #262119;
+      overflow: hidden;
+    }
+
+    .cal-progress span {
+      display: block;
+      height: 100%;
+      background: var(--gold);
+    }
+
+    .cal-list {
+      display: grid;
+      gap: 4px;
+      align-content: start;
+    }
+
+    .cal-task {
+      height: 18px;
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 11px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-hint {
+      color: rgba(248, 244, 232, 0.35);
+      font-size: 12px;
+    }
+
+    .panel-body {
+      height: calc(100% - 57px);
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .quick-entry {
+      display: grid;
+      grid-template-columns: 1fr 40px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .quick-entry input { padding: 10px 11px; }
+
+    .quick-entry button {
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      color: var(--gold);
+    }
+
+    .notes, .goal-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .note, .goal {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: start;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .note p, .goal p {
+      margin: 0;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .goal.done p {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .goal-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal.open { display: flex; }
+
+    .task-panel {
+      width: min(680px, 100%);
+      max-height: min(760px, calc(100vh - 36px));
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #0b0a08;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .confirm-panel {
+      width: min(420px, 100%);
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #0b0a08;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .confirm-panel h2 {
+      margin-bottom: 8px;
+    }
+
+    .confirm-panel p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .confirm-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .danger-btn {
+      border-color: rgba(255, 77, 79, 0.55);
+      color: #fff;
+      background: rgba(255, 77, 79, 0.2);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-head h2 { font-size: 20px; }
+
+    .task-form {
+      display: grid;
+      grid-template-columns: 1fr 190px 44px;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .task-form input,
+    .task-form select {
+      height: 42px;
+      padding: 0 11px;
+    }
+
+    .task-list {
+      padding: 12px 16px 16px;
+      overflow: auto;
+      display: grid;
+      gap: 8px;
+    }
+
+    .task-item {
+      display: grid;
+      grid-template-columns: 30px 1fr auto 34px;
+      gap: 9px;
+      align-items: center;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .task-item input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--gold);
+    }
+
+    .task-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .task-title span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-item.done .task-title span:last-child {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .review-status {
+      justify-self: end;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .review-status.done {
+      color: var(--green);
+    }
+
+    .review-status.pending {
+      color: var(--red);
+      cursor: help;
+    }
+
+    .review-body {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .review-task {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    .review-reason {
+      display: none;
+      gap: 8px;
+    }
+
+    .review-reason.open {
+      display: grid;
+    }
+
+    .review-reason textarea {
+      min-height: 86px;
+      padding: 10px;
+      resize: vertical;
+    }
+
+    .soft-btn {
+      color: var(--gold);
+    }
+
+    .priority-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      flex: 0 0 auto;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 16px 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1180px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .left,
+      .right {
+        min-height: auto;
+      }
+
+      .right {
+        grid-template-rows: auto auto;
+      }
+
+      .right-top {
+        min-height: 610px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .app { padding: 8px; }
+      .bottom { grid-template-columns: 1fr; }
+      .section-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      h1 { white-space: normal; }
+      .bazi-strip { grid-template-columns: repeat(4, 30px); }
+      .calendar {
+        grid-template-columns: repeat(7, minmax(42px, 1fr));
+        grid-auto-rows: 72px;
+        gap: 4px;
+      }
+      .cal-day { padding: 23px 5px 5px; }
+      .cal-task { padding: 2px 4px; }
+      .task-form {
+        grid-template-columns: 1fr;
+      }
+      .task-form button { height: 42px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-actions" aria-label="页面操作">
+    <button class="icon-btn" id="undoBtn" type="button" title="还原之前" disabled="">↶</button>
+    <button class="icon-btn" id="redoBtn" type="button" title="还原之后" disabled="">↷</button>
+    <button class="icon-btn" id="clearBtn" type="button" title="清空全页">⌫</button>
+  </div>
+
+  <main class="app">
+    <section class="left" aria-label="月度时间线">
+      <header class="section-head">
+        <div class="title-wrap">
+          <p class="eyebrow">Target Timeline</p>
+          <h1 id="monthTitle">2026年6月 目标进度</h1>
+          <div class="month-editor" aria-label="切换左侧进度年月">
+            <input class="year-control" type="number" min="1900" max="2200" step="1" aria-label="年份">
+            <select class="month-control" aria-label="月份"><option value="0">1月</option><option value="1">2月</option><option value="2">3月</option><option value="3">4月</option><option value="4">5月</option><option value="5">6月</option><option value="6">7月</option><option value="7">8月</option><option value="8">9月</option><option value="9">10月</option><option value="10">11月</option><option value="11">12月</option></select>
+          </div>
+        </div>
+        <div class="bazi-strip" aria-hidden="true">
+          <div class="pillar">甲</div>
+          <div class="pillar">辰</div>
+          <div class="pillar">丙</div>
+          <div class="pillar">午</div>
+        </div>
+      </header>
+      <div class="month-stats">
+        <div class="stat-line">
+          <span id="monthSummary">3 / 7 完成</span>
+          <span id="monthPercent">43%</span>
+        </div>
+        <div class="big-progress"><span id="monthBar" style="width: 43%;"></span></div>
+      </div>
+      <div class="timeline" id="timeline"><button type="button" class="day-row" data-day="1">
+          <span class="day-badge">1</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="2">
+          <span class="day-badge">2</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="3">
+          <span class="day-badge">3</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="4">
+          <span class="day-badge">4</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="5">
+          <span class="day-badge">5</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="6">
+          <span class="day-badge">6</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="7">
+          <span class="day-badge">7</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="8">
+          <span class="day-badge">8</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>1/1 项</span>
+              <span>100%</span>
+            </span>
+            <span class="day-progress"><span style="width:100%"></span></span>
+            <span class="chips"><span class="chip" style="background:#ffa940">P2 学用豆包 分析股票 网购筛选防坑 屋内布局设计规划 维修建议 已完成</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="9">
+          <span class="day-badge">9</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="10">
+          <span class="day-badge">10</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="11">
+          <span class="day-badge">11</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="12">
+          <span class="day-badge">12</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="13">
+          <span class="day-badge">13</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="14">
+          <span class="day-badge">14</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>1/1 项</span>
+              <span>100%</span>
+            </span>
+            <span class="day-progress"><span style="width:100%"></span></span>
+            <span class="chips"><span class="chip" style="background:#1890ff">P3 跑步半小时 已完成</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="15">
+          <span class="day-badge">15</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="16">
+          <span class="day-badge">16</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="17">
+          <span class="day-badge">17</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="18">
+          <span class="day-badge">18</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="19">
+          <span class="day-badge">19</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="20">
+          <span class="day-badge">20</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>1/1 项</span>
+              <span>100%</span>
+            </span>
+            <span class="day-progress"><span style="width:100%"></span></span>
+            <span class="chips"><span class="chip" style="background:#52c41a">P4 改用增压水泵水管 已完成</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="21">
+          <span class="day-badge">21</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="22">
+          <span class="day-badge">22</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="23">
+          <span class="day-badge">23</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="24">
+          <span class="day-badge">24</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>0/1 项</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="chip" style="background:#52c41a">P4 出去逛街 未完成</span></span>
+          </span>
+        </button><button type="button" class="day-row active" data-day="25">
+          <span class="day-badge">25</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>0/1 项</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="chip" style="background:#ffa940">P2 学用CODEX制作html格式模版 </span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="26">
+          <span class="day-badge">26</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="27">
+          <span class="day-badge">27</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>0/2 项</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="chip" style="background:#ff4d4f">P1 安装tracklight </span><span class="chip" style="background:#ffa940">P2 CODEX制作个股分析与筛选一览表 </span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="28">
+          <span class="day-badge">28</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="29">
+          <span class="day-badge">29</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button><button type="button" class="day-row" data-day="30">
+          <span class="day-badge">30</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>未记录</span>
+              <span>0%</span>
+            </span>
+            <span class="day-progress"><span style="width:0%"></span></span>
+            <span class="chips"><span class="empty-hint">点这里添加当日任务</span></span>
+          </span>
+        </button></div>
+    </section>
+
+    <section class="right" aria-label="右侧工作区">
+      <section class="right-top" aria-label="日历">
+        <header class="section-head">
+          <div class="title-wrap">
+            <p class="eyebrow">Calendar Sync</p>
+            <h2 id="calendarTitle">2026年6月 整月日历</h2>
+            <div class="month-editor" aria-label="切换日历年月">
+              <input class="year-control" type="number" min="1900" max="2200" step="1" aria-label="年份">
+              <select class="month-control" aria-label="月份"><option value="0">1月</option><option value="1">2月</option><option value="2">3月</option><option value="3">4月</option><option value="4">5月</option><option value="5">6月</option><option value="6">7月</option><option value="7">8月</option><option value="8">9月</option><option value="9">10月</option><option value="10">11月</option><option value="11">12月</option></select>
+            </div>
+          </div>
+          <button id="todayBtn" type="button">今天</button>
+        </header>
+        <div class="calendar-wrap">
+          <div class="weekdays" aria-hidden="true">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="calendar" id="calendar"><button type="button" class="cal-day" data-day="1">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">1</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="2">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">2</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="3">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">3</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="4">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">4</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="5">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">5</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="6">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">6</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="7">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">7</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="8">
+          <span class="cal-progress"><span style="width:100%"></span></span>
+          <span class="day-num">8</span>
+          <span class="cal-list">
+            <span class="cal-task" style="background:#ffa940; opacity:0.52">学用豆包 分析股票 网购筛选防坑 屋内布局设计规划 维修建议</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="9">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">9</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="10">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">10</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="11">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">11</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="12">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">12</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="13">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">13</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="14">
+          <span class="cal-progress"><span style="width:100%"></span></span>
+          <span class="day-num">14</span>
+          <span class="cal-list">
+            <span class="cal-task" style="background:#1890ff; opacity:0.52">跑步半小时</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="15">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">15</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="16">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">16</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="17">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">17</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="18">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">18</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="19">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">19</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="20">
+          <span class="cal-progress"><span style="width:100%"></span></span>
+          <span class="day-num">20</span>
+          <span class="cal-list">
+            <span class="cal-task" style="background:#52c41a; opacity:0.52">改用增压水泵水管</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="21">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">21</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="22">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">22</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="23">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">23</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="24">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">24</span>
+          <span class="cal-list">
+            <span class="cal-task" style="background:#52c41a; opacity:1">出去逛街</span>
+          </span>
+        </button><button type="button" class="cal-day active" data-day="25">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">25</span>
+          <span class="cal-list">
+            <span class="cal-task" style="background:#ffa940; opacity:1">学用CODEX制作html格式模版</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="26">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">26</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="27">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">27</span>
+          <span class="cal-list">
+            <span class="cal-task" style="background:#ff4d4f; opacity:1">安装tracklight</span><span class="cal-task" style="background:#ffa940; opacity:1">CODEX制作个股分析与筛选一览表</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="28">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">28</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="29">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">29</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button><button type="button" class="cal-day" data-day="30">
+          <span class="cal-progress"><span style="width:0%"></span></span>
+          <span class="day-num">30</span>
+          <span class="cal-list">
+            <span class="empty-hint">+</span>
+          </span>
+        </button></div>
+        </div>
+      </section>
+
+      <section class="bottom" aria-label="灵感和月目标">
+        <section class="idea" aria-label="灵感收集箱">
+          <header class="section-head">
+            <div class="title-wrap">
+              <p class="eyebrow">Inspiration</p>
+              <h2>灵感池</h2>
+            </div>
+          </header>
+          <div class="panel-body">
+            <form class="quick-entry" id="ideaForm">
+              <label class="sr-only" for="ideaInput">新增灵感</label>
+              <input id="ideaInput" placeholder="快速记下一条想法">
+              <button type="submit" title="添加灵感">+</button>
+            </form>
+            <div class="notes" id="ideas"><div class="note"><p>探索CODEX 应用业绩记录 目标管理 和 决策分析</p><button class="icon-btn" type="button" title="删除">x</button></div></div>
+          </div>
+        </section>
+
+        <section class="goals" aria-label="核心月目标">
+          <header class="section-head">
+            <div class="title-wrap">
+              <p class="eyebrow">Core Goals</p>
+              <h2>本月大目标</h2>
+            </div>
+          </header>
+          <div class="panel-body">
+            <form class="quick-entry" id="goalForm">
+              <label class="sr-only" for="goalInput">新增目标</label>
+              <input id="goalInput" placeholder="添加一个月度目标">
+              <button type="submit" title="添加目标">+</button>
+            </form>
+            <div class="goal-list" id="goals"><div class="goal">
+          <p>○ 卧室改用tracklight，厕所改用增压泵水管</p>
+          <span class="goal-actions">
+            <button class="icon-btn goal-toggle" type="button" title="切换完成">✓</button>
+            <button class="icon-btn goal-delete" type="button" title="删除">x</button>
+          </span>
+        </div><div class="goal">
+          <p>○ 用CODEX制作个股投资分析和帅选一览表</p>
+          <span class="goal-actions">
+            <button class="icon-btn goal-toggle" type="button" title="切换完成">✓</button>
+            <button class="icon-btn goal-delete" type="button" title="删除">x</button>
+          </span>
+        </div><div class="goal">
+          <p>○ 用code制作目标管理和进度复盘一览表</p>
+          <span class="goal-actions">
+            <button class="icon-btn goal-toggle" type="button" title="切换完成">✓</button>
+            <button class="icon-btn goal-delete" type="button" title="删除">x</button>
+          </span>
+        </div></div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <section class="modal" id="taskModal" aria-hidden="true">
+    <div class="task-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <h2 id="modalTitle">管理待办</h2>
+        <button class="icon-btn" id="closeModal" type="button" title="关闭">x</button>
+      </div>
+      <form class="task-form" id="taskForm">
+        <label class="sr-only" for="taskInput">新增待办</label>
+        <input id="taskInput" placeholder="写下这一天要推进的事">
+        <label class="sr-only" for="priorityInput">优先级</label>
+        <select id="priorityInput">
+          <option value="p1">P1 紧急且重要</option>
+          <option value="p2">P2 重要不紧急</option>
+          <option value="p3">P3 紧急不重要</option>
+          <option value="p4">P4 不紧急不重要</option>
+        </select>
+        <button type="submit" title="添加待办">+</button>
+      </form>
+      <div class="legend">
+        <span><i class="priority-dot" style="background:#ff4d4f"></i>P1 红</span>
+        <span><i class="priority-dot" style="background:#ffa940"></i>P2 橙</span>
+        <span><i class="priority-dot" style="background:#1890ff"></i>P3 蓝</span>
+        <span><i class="priority-dot" style="background:#52c41a"></i>P4 绿</span>
+      </div>
+      <div class="task-list" id="taskList"></div>
+    </div>
+  </section>
+
+  <section class="modal" id="clearModal" aria-hidden="true">
+    <div class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
+      <h2 id="clearTitle">确定清空记录？</h2>
+      <p>此操作会清空当前月份页面里的待办、灵感和本月大目标。你可以用还原之前按钮恢复。</p>
+      <div class="confirm-actions">
+        <button id="cancelClearBtn" type="button">否</button>
+        <button class="danger-btn" id="confirmClearBtn" type="button">是</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="modal" id="reviewModal" aria-hidden="true">
+    <div class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+      <h2 id="reviewTitle">昨日事项复盘</h2>
+      <p id="reviewPrompt">这项任务是否已经完成？</p>
+      <div class="review-body">
+        <div class="review-task" id="reviewTaskText"></div>
+        <div class="confirm-actions" id="reviewChoiceActions">
+          <button class="soft-btn" id="reviewDoneBtn" type="button">已完成</button>
+          <button class="danger-btn" id="reviewUndoneBtn" type="button">未完成</button>
+        </div>
+        <div class="review-reason" id="reviewReasonBox">
+          <textarea id="reviewReasonInput" maxlength="100" placeholder="请写下未完成原因，100字内"></textarea>
+          <div class="confirm-actions">
+            <button id="reviewBackBtn" type="button">返回</button>
+            <button class="danger-btn" id="saveReviewReasonBtn" type="button">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const now = new Date();
+    let viewYear = now.getFullYear();
+    let viewMonth = now.getMonth();
+    const priorityMap = {
+      p1: { label: "P1", color: "#ff4d4f" },
+      p2: { label: "P2", color: "#ffa940" },
+      p3: { label: "P3", color: "#1890ff" },
+      p4: { label: "P4", color: "#52c41a" }
+    };
+
+    let selectedDay = now.getDate();
+    let state = loadState();
+    let undoStack = [];
+    let redoStack = [];
+    let activeReview = null;
+    let reviewTimer = null;
+
+    const els = {
+      undoBtn: document.getElementById("undoBtn"),
+      redoBtn: document.getElementById("redoBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      clearModal: document.getElementById("clearModal"),
+      cancelClearBtn: document.getElementById("cancelClearBtn"),
+      confirmClearBtn: document.getElementById("confirmClearBtn"),
+      reviewModal: document.getElementById("reviewModal"),
+      reviewTitle: document.getElementById("reviewTitle"),
+      reviewTaskText: document.getElementById("reviewTaskText"),
+      reviewChoiceActions: document.getElementById("reviewChoiceActions"),
+      reviewDoneBtn: document.getElementById("reviewDoneBtn"),
+      reviewUndoneBtn: document.getElementById("reviewUndoneBtn"),
+      reviewReasonBox: document.getElementById("reviewReasonBox"),
+      reviewReasonInput: document.getElementById("reviewReasonInput"),
+      reviewBackBtn: document.getElementById("reviewBackBtn"),
+      saveReviewReasonBtn: document.getElementById("saveReviewReasonBtn"),
+      monthTitle: document.getElementById("monthTitle"),
+      calendarTitle: document.getElementById("calendarTitle"),
+      monthSummary: document.getElementById("monthSummary"),
+      monthPercent: document.getElementById("monthPercent"),
+      monthBar: document.getElementById("monthBar"),
+      timeline: document.getElementById("timeline"),
+      calendar: document.getElementById("calendar"),
+      taskModal: document.getElementById("taskModal"),
+      modalTitle: document.getElementById("modalTitle"),
+      closeModal: document.getElementById("closeModal"),
+      taskForm: document.getElementById("taskForm"),
+      taskInput: document.getElementById("taskInput"),
+      priorityInput: document.getElementById("priorityInput"),
+      taskList: document.getElementById("taskList"),
+      ideaForm: document.getElementById("ideaForm"),
+      ideaInput: document.getElementById("ideaInput"),
+      ideas: document.getElementById("ideas"),
+      goalForm: document.getElementById("goalForm"),
+      goalInput: document.getElementById("goalInput"),
+      goals: document.getElementById("goals"),
+      todayBtn: document.getElementById("todayBtn"),
+      yearControls: document.querySelectorAll(".year-control"),
+      monthControls: document.querySelectorAll(".month-control")
+    };
+
+    function daysInViewMonth() {
+      return new Date(viewYear, viewMonth + 1, 0).getDate();
+    }
+
+    function monthKey() {
+      return `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}`;
+    }
+
+    function storeKey() {
+      return `bazi-goal-tracker-${monthKey()}`;
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(storeKey());
+      if (saved) return normalizeState(JSON.parse(saved));
+
+      return normalizeState({
+        days: {},
+        ideas: ["客户旅程复盘", "奖励日：短途旅行或安静下午"],
+        goals: [
+          { id: crypto.randomUUID(), text: "完成本月最重要项目的第一版", done: false },
+          { id: crypto.randomUUID(), text: "每周复盘一次目标进度", done: false }
+        ]
+      });
+    }
+
+    function normalizeState(raw) {
+      const normalized = {
+        days: raw.days || {},
+        ideas: raw.ideas || [],
+        goals: raw.goals || []
+      };
+      for (let day = 1; day <= daysInViewMonth(); day++) {
+        normalized.days[day] ||= [];
+      }
+      Object.keys(normalized.days).forEach(day => {
+        if (Number(day) > daysInViewMonth()) delete normalized.days[day];
+      });
+      return normalized;
+    }
+
+    function saveState() {
+      localStorage.setItem(storeKey(), JSON.stringify(state));
+    }
+
+    function snapshot() {
+      return {
+        year: viewYear,
+        month: viewMonth,
+        day: selectedDay,
+        state: JSON.parse(JSON.stringify(state))
+      };
+    }
+
+    function restoreSnapshot(entry) {
+      viewYear = entry.year;
+      viewMonth = entry.month;
+      selectedDay = Math.min(entry.day, daysInViewMonth());
+      state = normalizeState(JSON.parse(JSON.stringify(entry.state)));
+      saveState();
+      render();
+    }
+
+    function updateHistoryButtons() {
+      els.undoBtn.disabled = undoStack.length === 0;
+      els.redoBtn.disabled = redoStack.length === 0;
+    }
+
+    function mutate(action) {
+      undoStack.push(snapshot());
+      redoStack = [];
+      action();
+      saveState();
+      render();
+    }
+
+    function switchMonth(year, month) {
+      saveState();
+      viewYear = Math.min(2200, Math.max(1900, Number(year) || now.getFullYear()));
+      viewMonth = Math.min(11, Math.max(0, Number(month)));
+      selectedDay = Math.min(selectedDay, daysInViewMonth());
+      state = loadState();
+      render();
+    }
+
+    function pct(day) {
+      const tasks = state.days[day] || [];
+      if (!tasks.length) return 0;
+      return Math.round((tasks.filter(t => t.done).length / tasks.length) * 100);
+    }
+
+    function allTasks() {
+      return Object.values(state.days).flat();
+    }
+
+    function render() {
+      const monthDate = new Date(viewYear, viewMonth, 1);
+      const monthName = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" }).format(monthDate);
+      els.monthTitle.textContent = `${monthName} 目标进度`;
+      els.calendarTitle.textContent = `${monthName} 整月日历`;
+      syncMonthControls();
+      renderStats();
+      renderTimeline();
+      renderCalendar();
+      renderIdeas();
+      renderGoals();
+      if (els.taskModal.classList.contains("open")) renderTaskPanel();
+      updateHistoryButtons();
+      scheduleOverdueReview();
+    }
+
+    function renderStats() {
+      const tasks = allTasks();
+      const done = tasks.filter(t => t.done).length;
+      const percent = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+      els.monthSummary.textContent = `${done} / ${tasks.length} 完成`;
+      els.monthPercent.textContent = `${percent}%`;
+      els.monthBar.style.width = `${percent}%`;
+    }
+
+    function setupMonthControls() {
+      els.monthControls.forEach(select => {
+        select.innerHTML = "";
+        for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+          const option = document.createElement("option");
+          option.value = monthIndex;
+          option.textContent = `${monthIndex + 1}月`;
+          select.appendChild(option);
+        }
+      });
+
+      els.yearControls.forEach(input => {
+        input.addEventListener("input", () => {
+          if (input.value.length >= 4) switchMonth(input.value, viewMonth);
+        });
+        input.addEventListener("change", () => switchMonth(input.value, viewMonth));
+        input.addEventListener("blur", () => switchMonth(input.value, viewMonth));
+        input.addEventListener("keydown", event => {
+          if (event.key === "Enter") input.blur();
+        });
+      });
+
+      els.monthControls.forEach(select => {
+        select.addEventListener("change", () => switchMonth(viewYear, select.value));
+      });
+    }
+
+    function syncMonthControls() {
+      els.yearControls.forEach(input => {
+        if (document.activeElement !== input) input.value = viewYear;
+      });
+      els.monthControls.forEach(select => {
+        select.value = viewMonth;
+      });
+    }
+
+    function renderTimeline() {
+      els.timeline.innerHTML = "";
+      for (let day = 1; day <= daysInViewMonth(); day++) {
+        const tasks = state.days[day] || [];
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = `day-row${day === selectedDay ? " active" : ""}`;
+        item.dataset.day = day;
+        item.innerHTML = `
+          <span class="day-badge">${day}</span>
+          <span class="day-meta">
+            <span class="day-label">
+              <span>${tasks.length ? `${tasks.filter(t => t.done).length}/${tasks.length} 项` : "未记录"}</span>
+              <span>${pct(day)}%</span>
+            </span>
+            <span class="day-progress"><span style="width:${pct(day)}%"></span></span>
+            <span class="chips">${tasks.slice(0, 3).map(taskChip).join("") || '<span class="empty-hint">点这里添加当日任务</span>'}</span>
+          </span>
+        `;
+        item.addEventListener("click", () => openDay(day));
+        els.timeline.appendChild(item);
+      }
+    }
+
+    function renderCalendar() {
+      els.calendar.innerHTML = "";
+      const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+      const mondayOffset = (firstDay + 6) % 7;
+
+      for (let i = 0; i < mondayOffset; i++) {
+        els.calendar.appendChild(document.createElement("div")).className = "cal-blank";
+      }
+
+      for (let day = 1; day <= daysInViewMonth(); day++) {
+        const tasks = state.days[day] || [];
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = `cal-day${day === selectedDay ? " active" : ""}`;
+        cell.dataset.day = day;
+        cell.innerHTML = `
+          <span class="cal-progress"><span style="width:${pct(day)}%"></span></span>
+          <span class="day-num">${day}</span>
+          <span class="cal-list">
+            ${tasks.slice(0, 4).map(taskPill).join("") || '<span class="empty-hint">+</span>'}
+          </span>
+        `;
+        cell.addEventListener("click", () => openDay(day));
+        els.calendar.appendChild(cell);
+      }
+    }
+
+    function renderTaskPanel() {
+      const tasks = state.days[selectedDay] || [];
+      els.modalTitle.textContent = `${viewYear}年${viewMonth + 1}月${selectedDay}日 待办`;
+      els.taskList.innerHTML = tasks.length ? "" : '<p class="empty-hint">这一天还没有待办。可以从这里添加，左侧进度会同步更新。</p>';
+      tasks.forEach(task => {
+        const row = document.createElement("div");
+        row.className = `task-item${task.done ? " done" : ""}`;
+        row.innerHTML = `
+          <input type="checkbox" ${task.done ? "checked" : ""} aria-label="切换完成状态">
+          <span class="task-title">
+            <span class="priority-dot" style="background:${priorityMap[task.priority].color}"></span>
+            <span>${escapeHtml(task.text)}</span>
+          </span>
+          ${reviewStatusHtml(task)}
+          <button class="icon-btn" type="button" title="删除">x</button>
+        `;
+        row.querySelector("input").addEventListener("change", event => {
+          mutate(() => {
+            task.done = event.target.checked;
+            task.reviewStatus = task.done ? "completed" : "";
+            task.reviewNote = "";
+          });
+        });
+        row.querySelector("button").addEventListener("click", () => {
+          mutate(() => {
+            state.days[selectedDay] = state.days[selectedDay].filter(item => item.id !== task.id);
+          });
+        });
+        els.taskList.appendChild(row);
+      });
+    }
+
+    function renderIdeas() {
+      els.ideas.innerHTML = "";
+      state.ideas.forEach((idea, index) => {
+        const item = document.createElement("div");
+        item.className = "note";
+        item.innerHTML = `<p>${escapeHtml(idea)}</p><button class="icon-btn" type="button" title="删除">x</button>`;
+        item.querySelector("button").addEventListener("click", () => {
+          mutate(() => {
+            state.ideas.splice(index, 1);
+          });
+        });
+        els.ideas.appendChild(item);
+      });
+    }
+
+    function renderGoals() {
+      els.goals.innerHTML = "";
+      state.goals.forEach(goal => {
+        const item = document.createElement("div");
+        item.className = `goal${goal.done ? " done" : ""}`;
+        item.innerHTML = `
+          <p>${goal.done ? "&#10003;" : "&#9675;"} ${escapeHtml(goal.text)}</p>
+          <span class="goal-actions">
+            <button class="icon-btn goal-toggle" type="button" title="切换完成">&#10003;</button>
+            <button class="icon-btn goal-delete" type="button" title="删除">x</button>
+          </span>
+        `;
+        item.querySelector(".goal-toggle").addEventListener("click", () => {
+          mutate(() => {
+            goal.done = !goal.done;
+          });
+        });
+        item.querySelector(".goal-delete").addEventListener("click", () => {
+          mutate(() => {
+            state.goals = state.goals.filter(item => item.id !== goal.id);
+          });
+        });
+        els.goals.appendChild(item);
+      });
+    }
+
+    function taskChip(task) {
+      const priority = priorityMap[task.priority];
+      return `<span class="chip" style="background:${priority.color}">${priority.label} ${escapeHtml(task.text)} ${reviewText(task)}</span>`;
+    }
+
+    function taskPill(task) {
+      const priority = priorityMap[task.priority];
+      return `<span class="cal-task" style="background:${priority.color}; opacity:${task.done ? 0.52 : 1}">${escapeHtml(task.text)}</span>`;
+    }
+
+    function reviewText(task) {
+      if (task.reviewStatus === "completed") return "已完成";
+      if (task.reviewStatus === "incomplete") return "未完成";
+      return "";
+    }
+
+    function reviewStatusHtml(task) {
+      if (task.reviewStatus === "completed") {
+        return '<span class="review-status done">已完成</span>';
+      }
+      if (task.reviewStatus === "incomplete") {
+        return `<span class="review-status pending" title="${escapeHtml(task.reviewNote || "未填写原因")}">未完成</span>`;
+      }
+      return '<span></span>';
+    }
+
+    function isPastDay(day) {
+      const today = new Date();
+      const todayYear = today.getFullYear();
+      const todayMonth = today.getMonth();
+      if (viewYear < todayYear) return true;
+      if (viewYear > todayYear) return false;
+      if (viewMonth < todayMonth) return true;
+      if (viewMonth > todayMonth) return false;
+      return day < today.getDate();
+    }
+
+    function findOverdueReview() {
+      for (let day = 1; day <= daysInViewMonth(); day++) {
+        if (!isPastDay(day)) continue;
+        const tasks = state.days[day] || [];
+        const task = tasks.find(item => !item.done && !item.reviewStatus);
+        if (task) return { day, id: task.id, task };
+      }
+      return null;
+    }
+
+    function scheduleOverdueReview() {
+      clearTimeout(reviewTimer);
+      reviewTimer = setTimeout(() => {
+        if (els.taskModal.classList.contains("open") || els.clearModal.classList.contains("open") || els.reviewModal.classList.contains("open")) return;
+        const nextReview = findOverdueReview();
+        if (nextReview) openReview(nextReview);
+      }, 180);
+    }
+
+    function openReview(review) {
+      activeReview = review;
+      els.reviewTitle.textContent = `${viewYear}年${viewMonth + 1}月${review.day}日 事项复盘`;
+      els.reviewTaskText.textContent = review.task.text;
+      els.reviewReasonInput.value = "";
+      els.reviewChoiceActions.style.display = "flex";
+      els.reviewReasonBox.classList.remove("open");
+      els.reviewModal.classList.add("open");
+      els.reviewModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeReview() {
+      els.reviewModal.classList.remove("open");
+      els.reviewModal.setAttribute("aria-hidden", "true");
+      activeReview = null;
+      scheduleOverdueReview();
+    }
+
+    function getActiveReviewTask() {
+      if (!activeReview) return null;
+      return (state.days[activeReview.day] || []).find(task => task.id === activeReview.id) || null;
+    }
+
+    function markReviewCompleted() {
+      const review = activeReview;
+      if (!review) return;
+      mutate(() => {
+        const task = (state.days[review.day] || []).find(item => item.id === review.id);
+        if (!task) return;
+        task.done = true;
+        task.reviewStatus = "completed";
+        task.reviewNote = "";
+      });
+      closeReview();
+    }
+
+    function showReviewReason() {
+      els.reviewChoiceActions.style.display = "none";
+      els.reviewReasonBox.classList.add("open");
+      els.reviewReasonInput.focus();
+    }
+
+    function saveReviewReason() {
+      const review = activeReview;
+      if (!review) return;
+      const reason = els.reviewReasonInput.value.trim().slice(0, 100);
+      mutate(() => {
+        const task = (state.days[review.day] || []).find(item => item.id === review.id);
+        if (!task) return;
+        task.done = false;
+        task.reviewStatus = "incomplete";
+        task.reviewNote = reason || "未填写原因";
+      });
+      closeReview();
+    }
+
+    function openDay(day) {
+      selectedDay = day;
+      els.taskModal.classList.add("open");
+      els.taskModal.setAttribute("aria-hidden", "false");
+      render();
+      setTimeout(() => els.taskInput.focus(), 0);
+    }
+
+    function closeDay() {
+      els.taskModal.classList.remove("open");
+      els.taskModal.setAttribute("aria-hidden", "true");
+      render();
+    }
+
+    function openClearConfirm() {
+      els.clearModal.classList.add("open");
+      els.clearModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeClearConfirm() {
+      els.clearModal.classList.remove("open");
+      els.clearModal.setAttribute("aria-hidden", "true");
+    }
+
+    function clearCurrentPage() {
+      mutate(() => {
+        state = normalizeState({ days: {}, ideas: [], goals: [] });
+      });
+      closeClearConfirm();
+      closeReview();
+    }
+
+    function undo() {
+      if (!undoStack.length) return;
+      redoStack.push(snapshot());
+      restoreSnapshot(undoStack.pop());
+    }
+
+    function redo() {
+      if (!redoStack.length) return;
+      undoStack.push(snapshot());
+      restoreSnapshot(redoStack.pop());
+    }
+
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    els.taskForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const text = els.taskInput.value.trim();
+      if (!text) return;
+      mutate(() => {
+        state.days[selectedDay] ||= [];
+        state.days[selectedDay].push({
+          id: crypto.randomUUID(),
+          text,
+          priority: els.priorityInput.value,
+          done: false
+        });
+      });
+      els.taskInput.value = "";
+    });
+
+    els.ideaForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const text = els.ideaInput.value.trim();
+      if (!text) return;
+      mutate(() => {
+        state.ideas.unshift(text);
+      });
+      els.ideaInput.value = "";
+    });
+
+    els.goalForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const text = els.goalInput.value.trim();
+      if (!text) return;
+      mutate(() => {
+        state.goals.unshift({ id: crypto.randomUUID(), text, done: false });
+      });
+      els.goalInput.value = "";
+    });
+
+    els.undoBtn.addEventListener("click", undo);
+    els.redoBtn.addEventListener("click", redo);
+    els.clearBtn.addEventListener("click", openClearConfirm);
+    els.cancelClearBtn.addEventListener("click", closeClearConfirm);
+    els.confirmClearBtn.addEventListener("click", clearCurrentPage);
+    els.reviewDoneBtn.addEventListener("click", markReviewCompleted);
+    els.reviewUndoneBtn.addEventListener("click", showReviewReason);
+    els.reviewBackBtn.addEventListener("click", () => {
+      els.reviewReasonBox.classList.remove("open");
+      els.reviewChoiceActions.style.display = "flex";
+    });
+    els.saveReviewReasonBtn.addEventListener("click", saveReviewReason);
+    els.clearModal.addEventListener("click", event => {
+      if (event.target === els.clearModal) closeClearConfirm();
+    });
+    els.closeModal.addEventListener("click", closeDay);
+    els.taskModal.addEventListener("click", event => {
+      if (event.target === els.taskModal) closeDay();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeDay();
+        closeClearConfirm();
+      }
+    });
+    els.todayBtn.addEventListener("click", () => {
+      switchMonth(now.getFullYear(), now.getMonth());
+      openDay(now.getDate());
+    });
+
+    setupMonthControls();
+    render();
+  </script>
+
+
+</body></html>
